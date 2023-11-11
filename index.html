@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De hulpsom machine van Meester Stijn</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .calculator {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            max-width: 300px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        select {
+            margin-top: 5px;
+        }
+
+        button {
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        button:disabled {
+            background-color: #ddd !important; /* Important to override other styles */
+            cursor: not-allowed;
+            color: #555; /* Gray color for disabled buttons */
+        }
+
+        #result {
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: #000; /* Black text color for the result container */
+        }
+
+        .factor-options {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .factor-options button {
+            margin-bottom: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .intro-paragraph {
+            color: #0077b6; /* Ocean Blue */
+        }
+
+        /* Colors */
+        button:nth-child(1) { background-color: #03045e; } /* Dark Blue */
+        button:nth-child(2) { background-color: #023e8a; } /* Darker Blue */
+        button:nth-child(3) { background-color: #0077b6; } /* Ocean Blue */
+        button:nth-child(4) { background-color: #0096c7; } /* Blue */
+        button:nth-child(5) { background-color: #00b4d8; } /* Cerulean */
+        button:nth-child(6) { background-color: #48cae4; } /* Sky Blue */
+        button:nth-child(7) { background-color: #90e0ef; } /* Light Blue */
+        button:nth-child(8) { background-color: #ade8f4; } /* Lighter Blue */
+        button:nth-child(9) { background-color: #caf0f8; } /* Lightest Blue */
+        button:nth-child(10) { background-color: #ffc0cb; } /* New Color */
+    </style>
+</head>
+
+<body>
+    <div class="calculator">
+        <h1>De hulpsom machine van Meester Stijn</h1>
+        <p class="intro-paragraph">Deze speciale rekenmachine kan alleen eerst 10 keer.</p>
+        <label for="inputNumber">Voer een getal in:</label>
+        <input type="number" id="inputNumber" min="0" oninput="updateButtons()">
+
+        <div class="factor-options">
+            <label>Selecteer een factor:</label>
+            <button onclick="multiplyWithFactor(10)" id="btn10" disabled>10 keer</button>
+            <button onclick="multiplyWithFactor(20)" id="btn20" disabled>20 keer</button>
+            <button onclick="multiplyWithFactor(30)" id="btn30" disabled>30 keer</button>
+            <button onclick="multiplyWithFactor(40)" id="btn40" disabled>40 keer</button>
+            <button onclick="multiplyWithFactor(50)" id="btn50" disabled>50 keer</button>
+            <button onclick="multiplyWithFactor(60)" id="btn60" disabled>60 keer</button> <!-- New Button -->
+            <button onclick="multiplyWithFactor(70)" id="btn70" disabled>70 keer</button> <!-- New Button -->
+            <button onclick="multiplyWithFactor(80)" id="btn80" disabled>80 keer</button> <!-- New Button -->
+            <button onclick="multiplyWithFactor(90)" id="btn90" disabled>90 keer</button> <!-- New Button -->
+            <button onclick="multiplyWithFactor(100)" id="btn100" disabled>100 keer</button> <!-- New Button -->
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function updateButtons() {
+            var inputValue = document.getElementById('inputNumber').value;
+            var buttons = document.querySelectorAll('.factor-options button');
+
+            if (!isNaN(inputValue) && inputValue !== "") {
+                buttons.forEach(function (button, index) {
+                    button.disabled = (index !== 0); // Enable only the first button initially
+                });
+            } else {
+                buttons.forEach(function (button) {
+                    button.disabled = true;
+                });
+            }
+        }
+
+        function multiplyWithFactor(factor) {
+            var inputValue = document.getElementById('inputNumber').value;
+
+            if (!isNaN(inputValue) && inputValue !== "") {
+                var number = parseInt(inputValue, 10);
+                var multiplicationResult = number * factor;
+
+                if (Number.isFinite(multiplicationResult)) {
+                    var resultContainer = document.getElementById('result');
+                    resultContainer.innerHTML = number + " x " + factor + " = <span style='color: #0077B6;'>" + multiplicationResult + "</span>";
+                }
+
+                // Enable the next button
+                var nextFactor = factor + 10;
+                var nextButton = document.getElementById('btn' + nextFactor);
+                if (nextButton) {
+                    nextButton.disabled = false;
+                }
+            } else {
+                var resultContainer = document.getElementById('result');
+                resultContainer.innerHTML = "";
+            }
+        }
+    </script>
+</body>
+
+</html>
