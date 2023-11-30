@@ -14,30 +14,6 @@
             height: 100vh;
             font-family: 'Roboto', sans-serif;
         }
-font-family: Arial, sans-serif;
-            text-align: center;
-        }
-
-        #getallenlijn {
-            position: relative;
-            width: 80%;
-            margin: 20px auto;
-            height: 10px;
-            background-color: #ccc;
-        }
-
-        .breuk {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: #3498db;
-            color: #fff;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            cursor: pointer;
-            user-select: none;
-        }
     </style>
 </head>
 
@@ -96,50 +72,6 @@ font-family: Arial, sans-serif;
             </div>
         </div>
     </div>
-<h2>Sleep de breuken naar de getallenlijn</h2>
-
-<div id="getallenlijn"></div>
-
-<script>
-    function plaatsBreuk(breuk) {
-        const getallenlijn = document.getElementById('getallenlijn');
-        const breukElement = document.createElement('div');
-        breukElement.className = 'breuk';
-        breukElement.textContent = breuk;
-
-        breukElement.draggable = true;
-
-        breukElement.addEventListener('dragstart', function (e) {
-            e.dataTransfer.setData('text/plain', breuk);
-        });
-
-        getallenlijn.appendChild(breukElement);
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        plaatsBreuk('1/4');
-        plaatsBreuk('1/2');
-        plaatsBreuk('3/4');
-    });
-
-    const getallenlijn = document.getElementById('getallenlijn');
-
-    getallenlijn.addEventListener('dragover', function (e) {
-        e.preventDefault();
-    });
-
-    getallenlijn.addEventListener('drop', function (e) {
-        e.preventDefault();
-        const breuk = e.dataTransfer.getData('text/plain');
-        const posX = e.clientX - getallenlijn.getBoundingClientRect().left;
-        const breukElement = document.createElement('div');
-        breukElement.className = 'breuk';
-        breukElement.textContent = breuk;
-        breukElement.style.left = posX - 15 + 'px';
-
-        getallenlijn.appendChild(breukElement);
-    });
-</script>
 </body>
 
 </html>
