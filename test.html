@@ -1,0 +1,70 @@
+Hier is een voorbeeld van een getallenlijn van 0 tot 1 met een sleepbaar bolletje in HTML en JavaScript:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getallenlijn met Drag and Drop</title>
+    <style>
+        #getallenlijn {
+            position: relative;
+            width: 80%;
+            margin: 20px auto;
+            height: 10px;
+            background-color: #ccc;
+            overflow: hidden;
+        }
+
+        #bolletje {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #3498db;
+            border-radius: 50%;
+            cursor: grab;
+        }
+    </style>
+</head>
+<body>
+
+<div id="getallenlijn" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div id="bolletje" draggable="true" ondragstart="drag(event)" ondragend="dragEnd(event)"></div>
+</div>
+
+<script>
+    const bolletje = document.getElementById('bolletje');
+
+    function drag(e) {
+        e.dataTransfer.setData('text/plain', 'bolletje');
+    }
+
+    function dragEnd() {
+        bolletje.style.cursor = 'grab';
+    }
+
+    function allowDrop(e) {
+        e.preventDefault();
+    }
+
+    function drop(e) {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('text/plain');
+
+        if (data === 'bolletje') {
+            const getallenlijn = document.getElementById('getallenlijn');
+            const bolletjePos = e.clientX - getallenlijn.getBoundingClientRect().left;
+            const percentage = bolletjePos / getallenlijn.clientWidth;
+
+            bolletje.style.left = `${percentage * 100}%`;
+            bolletje.style.cursor = 'grab';
+        }
+    }
+</script>
+
+</body>
+</html>
+```
+
+In dit voorbeeld kun je het bolletje oppakken en over de getallenlijn slepen. Het bolletje geeft de positie aan als een percentage van de getallenlijn (van 0% tot 100%). Pas de code naar wens aan voor verdere aanpassingen.
