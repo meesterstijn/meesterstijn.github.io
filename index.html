@@ -8,6 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="/src/output.css" rel="stylesheet">
     <style>
          .content {
@@ -159,6 +165,8 @@
             
           </div>
 
+         
+
           <a href="https://open.spotify.com/" target="_blank" class="group text-md font-semibold leading-6 text-slate-50 hover:text-slate-200">
             <div class="group-hover py-2 border-b-4 border-b-transparent hover:border-b-white ease-in-out duration-300">
               <p class="group-hover:scale-90 duration-300">
@@ -195,13 +203,16 @@
       </nav>
     </header>
     <div class="">
-      <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
-        <h2 class="sr-only">Blocks</h2>
+      <div class="flex flex-col-2 gap-x-24 mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
 
-        <div class="grid grid-cols-4 gap-x-6 gap-y-10 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 xl:gap-x-8">
+        <!--clock-->
+        <div>
+          <div class="text-6xl lg:text-9xl text-white" id="clock"></div>
+          <script src="clock.js"></script>
+        </div>
 
-          <!--Grid homepage-->
-
+        <!--Grid homepage-->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 xl:gap-x-8 gap-x-6 gap-y-10 ">
           <a href="https://livecloud.online/nl/whiteboard" target="_blank" class="group">
             <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-transparent xl:aspect-h-8 xl:aspect-w-7">
               <div class="h-full w-full object-cover object-center group-hover:opacity-75 hover:scale-90 duration-300">
@@ -238,8 +249,24 @@
             <p class="mt-1 text-lg font-medium text-gray-900"></p>
           </a>
 
+          <a href="/quote.html" target="_blank" class="group">
+            <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-transparent xl:aspect-h-8 xl:aspect-w-7">
+              <div class="h-full w-full object-cover object-center group-hover:opacity-75 hover:scale-90 duration-300">
+                <svg data-slot="icon" fill="none" stroke-width="1.5" stroke="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.035 1.008-1.875 2.25-1.875 1.243 0 2.25.84 2.25 1.875 0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .658-.663 48.422 48.422 0 0 0-.37-5.36c-1.886.342-3.81.574-5.766.689a.578.578 0 0 1-.61-.58v0Z"></path>
+                </svg>
+              </div>
+            </div>
+            <h3 class="mt-4 text-sm font-semibold leading-6 text-slate-50 group-hover:text-slate-200">Spellen</h3>
+            <p class="mt-1 text-lg font-medium text-gray-900"></p>
+          </a>
         </div>
-      </div>
+
+        <!--section 2-->
+
+        
+        </div>
+        <!-- End section 2-->
     </div>
   </div>
   

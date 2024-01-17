@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#clock {
+    font-family: 'Bebas Neue', sans-serif;
+}
