@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="/src/output.css" rel="stylesheet">
+    <script src="date.js" defer></script>
     <style>
          .content {
             text-align: center;
@@ -206,11 +207,18 @@
       <div class="flex flex-col-2 gap-x-24 mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
 
         <!--clock-->
-        <div class="hover:scale-110 duration-300">
-          <div class="text-6xl lg:text-9xl text-white" id="clock"></div>
-          <script src="clock.js"></script>
+        <div class="flex flex-col">
+          <div class="hover:scale-110 duration-300">
+            <div class="text-6xl lg:text-9xl text-white" id="clock"></div>
+            <script src="clock.js"></script>
+          </div>
+          <div>
+          <!--voor onder klok mag hier-->
+            <div class="hover:scale-110 duration-300">
+              <p class="text-6xl lg:text-6xl text-white text-right" id="currentDate"></p>
+            </div>
+          </div>
         </div>
-
         <!--Grid homepage-->
         
         <!--section 2-->
