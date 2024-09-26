@@ -124,7 +124,7 @@
     </style>
 </head>
 
-<body class="bg-gradient-to-tr from-blue-950 via-blue-700 via-teal-600 via-emerald-500 to-lime-400 bg-fixed">
+<body class="bg-gradient-to-tr from-slate-800 to-slate-500 bg-fixed">
   <div class="flex flex-col">
     <header class="">
       <nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
@@ -211,18 +211,21 @@
       <div class="lg:flex lgflex-col-2 gap-x-24 mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
 
         <!--clock-->
-        <div class="flex flex-col">
-          <div class="hover:scale-110 duration-300">
-            <div class="text-6xl lg:text-9xl text-white" id="clock"></div>
-            <script src="clock.js"></script>
-          </div>
-          <div>
-          <!--voor onder klok mag hier-->
-            <div class="hover:scale-110 duration-300">
-              <p class="text-6xl lg:text-6xl text-white text-right" id="currentDate"></p>
-            </div>
-          </div>
+    <div class="flex flex-row sm:flex-col w-full">
+      <div class="hover:scale-110 duration-300">
+        <div class="text-5xl lg:text-8xl text-white text-left" id="clock"></div>
+        <script src="clock.js"></script>
+      </div>
+      <div class="grow sm:grow-0">
+        
+      </div>
+      <!--voor onder klok mag hier-->
+      <div>  
+        <div class="hover:scale-110 duration-300">
+          <p class="text-2xl lg:text-5xl text-white text-right sm:text-left" id="currentDate"></p>
         </div>
+      </div>
+    </div>
 
         <!--Grid homepage-->
         
