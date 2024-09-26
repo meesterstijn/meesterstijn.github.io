@@ -122,8 +122,9 @@
 
 <body class="bg-gradient-to-tr from-blue-950 via-blue-700 via-teal-600 via-emerald-500 to-lime-400 bg-fixed">
   <div class="flex flex-col">
-    <header class="">
-      <nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+     <header class=""> 
+      <!--Navbar Start-->
+      <nav class="mx-auto flex max-w-7xl items-center justify-between px-8 py-6 lg:px-8" aria-label="Global">
         <div class="flex lg:flex-1 items-center group">
                  
           <a href="/index.html" class="group text-md font-semibold leading-6 text-slate-50 hover:text-slate-200">
@@ -165,9 +166,9 @@
             -->
             
           </div>
-
+    
          
-
+    
           <a href="https://open.spotify.com/" target="_blank" class="group text-md font-semibold leading-6 text-slate-50 hover:text-slate-200">
             <div class="group-hover py-2 border-b-4 border-b-transparent hover:border-b-white ease-in-out duration-300">
               <p class="group-hover:scale-90 duration-300">
@@ -196,26 +197,30 @@
               </p>
             </div>
           </a>
-
+    
         </div>
         <div class="flex -space-x-2 overflow-hidden lg:flex lg:flex-1 lg:justify-end">
           <!--img class="inline-block h-10 w-10 rounded-full ring-2 ring-white" src="" alt=""-->
         </div>
       </nav>
-    </header>
+      <!--Navbar End-->
+     </header>
   </div>
-      <div class="flex flex-col sm:flex-row mx-auto max-w-2xl sm:flex-row gap-x-6 lg:gap-x-24 px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
+      <div class="flex flex-col sm:flex-row mx-auto max-w-2xl sm:flex-row gap-x-6 lg:gap-x-24 px-8 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-8">
 
         <!--clock-->
-    <div class="flex flex-col w-full">
+    <div class="flex flex-row sm:flex-col w-full">
       <div class="hover:scale-110 duration-300">
-        <div class="text-6xl lg:text-9xl text-white text-left" id="clock"></div>
+        <div class="text-5xl lg:text-8xl text-white text-left" id="clock"></div>
         <script src="clock.js"></script>
       </div>
-      <div>
+      <div class="grow sm:grow-0">
+        
+      </div>
       <!--voor onder klok mag hier-->
+      <div>  
         <div class="hover:scale-110 duration-300">
-          <p class="text-6xl lg:text-6xl text-white text-left" id="currentDate"></p>
+          <p class="text-2xl lg:text-5xl text-white text-right sm:text-left" id="currentDate"></p>
         </div>
       </div>
     </div>

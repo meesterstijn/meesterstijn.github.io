@@ -18,7 +18,7 @@ function displayDate() {
   var month = months[monthIndex];
 
   // Display the full date with the day of the week on the webpage
-  document.getElementById("currentDate").innerHTML = dayOfWeek + ', ' + day + ' ' + month + ' ' + year;
+  document.getElementById("currentDate").innerHTML = dayOfWeek + '<br>' + day + ' ' + month + ' ' + year;
 }
 
 // Call the displayDate function when the document is fully loaded
