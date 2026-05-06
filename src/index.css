@@ -1,11 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Meester Stijn — warm, modern classroom dashboard
    Palette: deep ink + cream, with a warm coral/amber accent
    Type: Fraunces (display serif) + Inter (body) */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 
 @layer base {
   :root {

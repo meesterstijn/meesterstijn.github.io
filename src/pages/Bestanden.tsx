@@ -5,28 +5,24 @@ import { Input } from "@/components/ui/input";
 
 type FileItem = {
   name: string;
-  category: "Rekenen" | "Taal" | "Wereld" | "Creatief" | "Bijbel";
+  category: "Eigen onderwerpen";
   type: "pdf" | "doc" | "sheet" | "image";
   size: string;
   updated: string;
+  href?: string;
 };
 
 const files: FileItem[] = [
-  { name: "Breuken werkblad — set A", category: "Rekenen", type: "pdf",   size: "240 KB", updated: "2 dagen geleden" },
-  { name: "Tafels oefenkaart 1–10",   category: "Rekenen", type: "pdf",   size: "180 KB", updated: "vorige week" },
-  { name: "Spellingdictee categorie 12", category: "Taal", type: "doc",  size: "88 KB",  updated: "vandaag" },
-  { name: "Verhalenstarters",         category: "Taal", type: "doc",     size: "120 KB", updated: "3 dagen geleden" },
-  { name: "Topografie Europa — kaart", category: "Wereld", type: "image", size: "1.2 MB", updated: "1 week geleden" },
-  { name: "Vulkanen — leestekst",     category: "Wereld", type: "pdf",   size: "320 KB", updated: "vandaag" },
-  { name: "Knutselplan moederdag",    category: "Creatief", type: "pdf", size: "440 KB", updated: "2 dagen geleden" },
-  { name: "Stilleven referentiebeeld", category: "Creatief", type: "image", size: "2.1 MB", updated: "vorige maand" },
-  { name: "Mattheüs 5 — werkblad",    category: "Bijbel", type: "doc",   size: "96 KB",  updated: "vandaag" },
-  { name: "Bijbelverhalen overzicht", category: "Bijbel", type: "sheet", size: "44 KB",  updated: "vorige week" },
-  { name: "Cijferlijst groep 6",      category: "Rekenen", type: "sheet", size: "62 KB", updated: "vandaag" },
-  { name: "Boekenlijst 2026",         category: "Taal", type: "sheet",   size: "30 KB",  updated: "1 maand geleden" },
+  { name: "Atomen en moleculen",             category: "Eigen onderwerpen", type: "doc", size: "", updated: "", href: "https://docs.google.com/document/d/11xUxWUe7yg4JNrFSCkojlbH6Z_dfXswfvQf3ku3HWwQ/edit?usp=sharing" },
+  { name: "Atoombommen en waterstofbommen",  category: "Eigen onderwerpen", type: "doc", size: "", updated: "", href: "https://docs.google.com/document/d/1Fdwrn1Mj5MnMu3CB0CUclHqsolOygQ-T6JwJa0pPuYI/edit?usp=sharing" },
+  { name: "De Ruimte",                       category: "Eigen onderwerpen", type: "doc", size: "", updated: "", href: "https://docs.google.com/document/d/1LhbCPe4rs5SYN7MMB7IfQq3jDxhEEABCZK_4XGft6QA/edit?usp=sharing" },
+  { name: "De Tweede Wereldoorlog in 's-Gravendeel", category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1J8ffqaGk1ZZ9G4LR_0TwB1TxhtsKxE1z/view?usp=sharing" },
+  { name: "Leren leren",                     category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
+  { name: "Nucleaire Fysica",                category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
+  { name: "Binas",                           category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
 ];
 
-const categories = ["Alle", "Rekenen", "Taal", "Wereld", "Creatief", "Bijbel"] as const;
+const categories = ["Alle", "Eigen onderwerpen"] as const;
 
 const iconFor = (t: FileItem["type"]) =>
   t === "pdf" ? FileText : t === "doc" ? FileType : t === "sheet" ? FileSpreadsheet : FileImage;
@@ -106,9 +102,20 @@ const Bestanden = () => {
                     </p>
                   </div>
                 </div>
-                <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
-                  <Download className="h-4 w-4" /> Downloaden
-                </button>
+                {f.href ? (
+                  <a
+                    href={f.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
+                  >
+                    <Download className="h-4 w-4" /> Openen
+                  </a>
+                ) : (
+                  <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
+                    <Download className="h-4 w-4" /> Downloaden
+                  </button>
+                )}
               </article>
             );
           })}
