@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 type FileItem = {
   name: string;
-  category: "Eigen onderwerpen";
+  category: "Eigen onderwerpen" | "ICT Lessen";
   type: "pdf" | "doc" | "sheet" | "image";
   size: string;
   updated: string;
@@ -19,10 +19,17 @@ const files: FileItem[] = [
   { name: "De Tweede Wereldoorlog in 's-Gravendeel", category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1J8ffqaGk1ZZ9G4LR_0TwB1TxhtsKxE1z/view?usp=sharing" },
   { name: "Leren leren",                     category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
   { name: "Nucleaire Fysica",                category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
-  { name: "Binas",                           category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
+  { name: "Binas", category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
+  { name: "Algoritmes leerkrachtinstructie", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gJlbdMDD4l8zOhKUm4S2ngdE9SJDKQ1H/view?usp=sharing" },
+  { name: "Algoritmes werkbladen",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1XfFuXm3A2aMARWr87m3e15G_IAei23Mh/view?usp=sharing" },
+  { name: "Binaire getallen spel",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1OTord8s1-OH-KHF3aIgOQl6afETUUzTI/view?usp=sharing" },
+  { name: "Encryptie leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing" },
+  { name: "Encryptie werkbladen",             category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1xn3zZfFsUogb-Z9hc5KseljhDFGsefdX/view?usp=sharing" },
+  { name: "Internet leerkrachtinstructie",    category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing" },
+  { name: "Internet werkbladen",              category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
 ];
 
-const categories = ["Alle", "Eigen onderwerpen"] as const;
+const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen"] as const;
 
 const iconFor = (t: FileItem["type"]) =>
   t === "pdf" ? FileText : t === "doc" ? FileType : t === "sheet" ? FileSpreadsheet : FileImage;
