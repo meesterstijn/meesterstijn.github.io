@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 type FileItem = {
   name: string;
-  category: "Eigen onderwerpen" | "ICT Lessen" | "Rekentijgers";
+  category: "Eigen onderwerpen" | "ICT Lessen" | "Rekentijgers" | "Werkwoordspelling";
   type: "pdf" | "doc" | "sheet" | "image";
   size: string;
   updated: string;
@@ -29,9 +29,10 @@ const files: FileItem[] = [
   { name: "Internet werkbladen", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
   { name: "Rekentijgers groep 7 deel A", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1ZKEbpC4hVozEQ_yBveHkapiTy7axGTo1/view?usp=sharing" },
   { name: "Rekentijgers groep 7 deel B", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/13rPYsbq5in0OZkh0xVAHl0IkNmMoc_QN/view?usp=sharing" },
+  { name: "Werkwoordspelling schema", category: "Werkwoordspelling", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1yrfdfkrp2NXe3uAQ6RnfAtEVF6eAfa3S/view?usp=sharing" },
 ];
 
-const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen", "Rekentijgers"] as const;
+const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen", "Rekentijgers", "Werkwoordspelling"] as const;
 
 const iconFor = (t: FileItem["type"]) =>
   t === "pdf" ? FileText : t === "doc" ? FileType : t === "sheet" ? FileSpreadsheet : FileImage;
