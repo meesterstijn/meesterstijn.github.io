@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 type FileItem = {
   name: string;
-  category: "Eigen onderwerpen" | "ICT Lessen";
+  category: "Eigen onderwerpen" | "ICT Lessen" | "Rekentijgers";
   type: "pdf" | "doc" | "sheet" | "image";
   size: string;
   updated: string;
@@ -26,10 +26,12 @@ const files: FileItem[] = [
   { name: "Encryptie leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing" },
   { name: "Encryptie werkbladen",             category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1xn3zZfFsUogb-Z9hc5KseljhDFGsefdX/view?usp=sharing" },
   { name: "Internet leerkrachtinstructie",    category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing" },
-  { name: "Internet werkbladen",              category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
+  { name: "Internet werkbladen", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
+  { name: "Rekentijgers groep 7 deel A", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1ZKEbpC4hVozEQ_yBveHkapiTy7axGTo1/view?usp=sharing" },
+  { name: "Rekentijgers groep 7 deel B", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/13rPYsbq5in0OZkh0xVAHl0IkNmMoc_QN/view?usp=sharing" },
 ];
 
-const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen"] as const;
+const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen", "Rekentijgers"] as const;
 
 const iconFor = (t: FileItem["type"]) =>
   t === "pdf" ? FileText : t === "doc" ? FileType : t === "sheet" ? FileSpreadsheet : FileImage;
