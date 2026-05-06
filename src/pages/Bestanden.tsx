@@ -107,7 +107,7 @@ const Bestanden = () => {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-lg font-semibold leading-tight">{f.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {f.category} · {f.size} · {f.updated}
+                      {f.category}{f.size ? ` · ${f.size}` : ""}{f.updated ? ` · ${f.updated}` : ""}
                     </p>
                   </div>
                 </div>
