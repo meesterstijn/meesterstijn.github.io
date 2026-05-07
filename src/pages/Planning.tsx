@@ -3,6 +3,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Clock, Lock, Pencil, Plus, Trash2, Check, X } from "lucide-react";
 
 const PASSWORD = "nietvoorleerlingen";
+const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_RTglOvHZz7tV68uVggfAWg_LEERCBXU";
+const ROW_ID = 1;
 
 type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
 type Block = { id: string; time: string; title: string; subject: string; tone: Tone };
@@ -54,24 +57,78 @@ const toneLabels: Record<Tone, string> = {
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 
-const Planning = () => {
-  const [week, setWeek] = useState<Day[]>(() => {
-    try {
-      const saved = localStorage.getItem("planning");
-      return saved ? JSON.parse(saved) : defaultWeek;
-    } catch { return defaultWeek; }
-  });
+async function loadFromSupabase(): Promise<Day[] | null> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/planning?id=eq.${ROW_ID}&select=data`, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+    const rows = await res.json();
+    if (rows && rows[0]?.data) return JSON.parse(rows[0].data);
+  } catch {}
+  return null;
+}
 
+async function saveToSupabase(week: Day[]) {
+  const data = JSON.stringify(week);
+  // Try update first
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/planning?id=eq.${ROW_ID}`, {
+    method: "PATCH",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ data }),
+  });
+  // If no row exists yet, insert
+  if (res.status === 404 || res.status === 200) {
+    const check = await fetch(`${SUPABASE_URL}/rest/v1/planning?id=eq.${ROW_ID}&select=id`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    });
+    const rows = await check.json();
+    if (!rows || rows.length === 0) {
+      await fetch(`${SUPABASE_URL}/rest/v1/planning`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ id: ROW_ID, data }),
+      });
+    }
+  }
+}
+
+const Planning = () => {
+  const [week, setWeek] = useState<Day[]>(defaultWeek);
+  const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; blockId: string } | null>(null);
   const [editVal, setEditVal] = useState<Block | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("planning", JSON.stringify(week));
-  }, [week]);
+    loadFromSupabase().then(data => {
+      if (data) setWeek(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const saveWeek = async (newWeek: Day[]) => {
+    setWeek(newWeek);
+    setSaving(true);
+    await saveToSupabase(newWeek);
+    setSaving(false);
+  };
 
   const handleUnlock = () => {
     if (pwInput === PASSWORD) {
@@ -91,26 +148,29 @@ const Planning = () => {
 
   const saveEdit = () => {
     if (!editing || !editVal) return;
-    setWeek(w => w.map((d, i) =>
+    const newWeek = week.map((d, i) =>
       i === editing.dayIdx
         ? { ...d, blocks: d.blocks.map(b => b.id === editing.blockId ? editVal : b) }
         : d
-    ));
+    );
+    saveWeek(newWeek);
     setEditing(null);
     setEditVal(null);
   };
 
   const deleteBlock = (dayIdx: number, blockId: string) => {
-    setWeek(w => w.map((d, i) =>
+    const newWeek = week.map((d, i) =>
       i === dayIdx ? { ...d, blocks: d.blocks.filter(b => b.id !== blockId) } : d
-    ));
+    );
+    saveWeek(newWeek);
   };
 
   const addBlock = (dayIdx: number) => {
     const newBlock: Block = { id: uid(), time: "08:00", title: "Nieuw blok", subject: "", tone: "amber" };
-    setWeek(w => w.map((d, i) =>
+    const newWeek = week.map((d, i) =>
       i === dayIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d
-    ));
+    );
+    setWeek(newWeek);
     startEdit(dayIdx, newBlock);
   };
 
@@ -124,19 +184,26 @@ const Planning = () => {
             <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Planning</h1>
             <p className="mt-3 text-muted-foreground">Een overzicht van de werkweek.</p>
           </div>
-          {!unlocked ? (
-            <button
-              onClick={() => setShowPw(true)}
-              className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
-            >
-              <Lock className="h-4 w-4" /> Bewerken
-            </button>
-          ) : (
-            <span className="mt-4 flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
-              <Pencil className="h-4 w-4" /> Bewerkmode aan
-            </span>
-          )}
+          <div className="mt-4 flex items-center gap-2">
+            {saving && <span className="text-xs text-muted-foreground">Opslaan…</span>}
+            {!unlocked ? (
+              <button
+                onClick={() => setShowPw(true)}
+                className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
+              >
+                <Lock className="h-4 w-4" /> Bewerken
+              </button>
+            ) : (
+              <span className="flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
+                <Pencil className="h-4 w-4" /> Bewerkmode aan
+              </span>
+            )}
+          </div>
         </div>
+
+        {loading && (
+          <p className="text-sm text-muted-foreground mb-6">Planning laden…</p>
+        )}
 
         {/* Wachtwoordscherm */}
         {showPw && (
@@ -194,7 +261,7 @@ const Planning = () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted-foreground">Kleur</label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {toneOptions.map(t => (
                       <button key={t} onClick={() => setEditVal({ ...editVal, tone: t })}
                         className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-smooth ${editVal.tone === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}>
