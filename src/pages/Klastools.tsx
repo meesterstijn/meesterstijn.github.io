@@ -113,11 +113,7 @@ const Tekstbord = () => {
         placeholder="Schrijf hier een opdracht, vraag of mededeling voor de klas…"
         className="h-36 w-full resize-none rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
       />
-      {text && (
-        <div className="rounded-xl border border-border bg-muted/30 p-4">
-          <p className="font-display text-lg font-medium leading-relaxed whitespace-pre-wrap">{text}</p>
-        </div>
-      )}
+
     </div>
   );
 };
