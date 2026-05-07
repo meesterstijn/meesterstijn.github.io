@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { FileText, FileSpreadsheet, FileImage, FileType, Download, Search } from "lucide-react";
+import { FileText, FileSpreadsheet, FileImage, FileType, Download, Search, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+const PASSWORD = "nietvoorleerlingen";
 
 type FileItem = {
   name: string;
@@ -10,6 +12,7 @@ type FileItem = {
   size: string;
   updated: string;
   href?: string;
+  protected?: boolean;
 };
 
 const files: FileItem[] = [
@@ -18,18 +21,18 @@ const files: FileItem[] = [
   { name: "De Ruimte",                       category: "Eigen onderwerpen", type: "doc", size: "", updated: "", href: "https://docs.google.com/document/d/1LhbCPe4rs5SYN7MMB7IfQq3jDxhEEABCZK_4XGft6QA/edit?usp=sharing" },
   { name: "De Tweede Wereldoorlog in 's-Gravendeel", category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1J8ffqaGk1ZZ9G4LR_0TwB1TxhtsKxE1z/view?usp=sharing" },
   { name: "Leren leren",                     category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
-  { name: "Nucleaire Fysica",                category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://docs.google.com/document/d/1LlxXQwAR6dpVa7mccfs_8CoLNci-BiqJhFegXGGRTAE/edit?usp=sharing" },
-  { name: "Binas", category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
-  { name: "Algoritmes leerkrachtinstructie", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gJlbdMDD4l8zOhKUm4S2ngdE9SJDKQ1H/view?usp=sharing" },
-  { name: "Algoritmes werkbladen",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1XfFuXm3A2aMARWr87m3e15G_IAei23Mh/view?usp=sharing" },
-  { name: "Binaire getallen spel",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1OTord8s1-OH-KHF3aIgOQl6afETUUzTI/view?usp=sharing" },
-  { name: "Encryptie leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing" },
-  { name: "Encryptie werkbladen",             category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1xn3zZfFsUogb-Z9hc5KseljhDFGsefdX/view?usp=sharing" },
-  { name: "Internet leerkrachtinstructie",    category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing" },
-  { name: "Internet werkbladen", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
-  { name: "Rekentijgers groep 7 deel A", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1ZKEbpC4hVozEQ_yBveHkapiTy7axGTo1/view?usp=sharing" },
-  { name: "Rekentijgers groep 7 deel B", category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/13rPYsbq5in0OZkh0xVAHl0IkNmMoc_QN/view?usp=sharing" },
-  { name: "Werkwoordspelling schema", category: "Werkwoordspelling", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1yrfdfkrp2NXe3uAQ6RnfAtEVF6eAfa3S/view?usp=sharing" },
+  { name: "Nucleaire Fysica",                category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
+  { name: "Binas",                           category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
+  { name: "Algoritmes leerkrachtinstructie", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gJlbdMDD4l8zOhKUm4S2ngdE9SJDKQ1H/view?usp=sharing", protected: true },
+  { name: "Algoritmes werkbladen",           category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1XfFuXm3A2aMARWr87m3e15G_IAei23Mh/view?usp=sharing" },
+  { name: "Binaire getallen spel",           category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1OTord8s1-OH-KHF3aIgOQl6afETUUzTI/view?usp=sharing" },
+  { name: "Encryptie leerkrachtinstructie",  category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing", protected: true },
+  { name: "Encryptie werkbladen",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1xn3zZfFsUogb-Z9hc5KseljhDFGsefdX/view?usp=sharing" },
+  { name: "Internet leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing", protected: true },
+  { name: "Internet werkbladen",             category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
+  { name: "Rekentijgers groep 7 deel A",     category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1ZKEbpC4hVozEQ_yBveHkapiTy7axGTo1/view?usp=sharing" },
+  { name: "Rekentijgers groep 7 deel B",     category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/13rPYsbq5in0OZkh0xVAHl0IkNmMoc_QN/view?usp=sharing" },
+  { name: "Werkwoordspelling schema",        category: "Werkwoordspelling", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1yrfdfkrp2NXe3uAQ6RnfAtEVF6eAfa3S/view?usp=sharing" },
 ];
 
 const categories = ["Alle", "Eigen onderwerpen", "ICT Lessen", "Rekentijgers", "Werkwoordspelling"] as const;
@@ -46,12 +49,36 @@ const tintFor = (t: FileItem["type"]) =>
 const Bestanden = () => {
   const [cat, setCat] = useState<(typeof categories)[number]>("Alle");
   const [q, setQ] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const [askingFor, setAskingFor] = useState<string | null>(null);
 
   const filtered = files.filter(
     (f) =>
       (cat === "Alle" || f.category === cat) &&
       f.name.toLowerCase().includes(q.toLowerCase())
   );
+
+  const handleProtectedClick = (href: string) => {
+    if (unlocked) {
+      window.open(href, "_blank");
+    } else {
+      setAskingFor(href);
+      setPwInput("");
+      setPwError(false);
+    }
+  };
+
+  const handlePwSubmit = () => {
+    if (pwInput === PASSWORD) {
+      setUnlocked(true);
+      setAskingFor(null);
+      window.open(askingFor!, "_blank");
+    } else {
+      setPwError(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-paper bg-warm">
@@ -64,6 +91,45 @@ const Bestanden = () => {
             Werkbladen, leesteksten en bronnen, geordend per vak.
           </p>
         </div>
+
+        {/* Wachtwoordscherm */}
+        {askingFor && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-tile">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+                  <Lock className="h-5 w-5" />
+                </span>
+                <p className="font-display text-xl font-semibold">Beveiligd bestand</p>
+              </div>
+              <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om dit bestand te openen.</p>
+              <input
+                type="password"
+                value={pwInput}
+                onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+                onKeyDown={(e) => e.key === "Enter" && handlePwSubmit()}
+                placeholder="Wachtwoord"
+                autoFocus
+                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
+              />
+              {pwError && <p className="mt-2 text-xs text-destructive">Wachtwoord onjuist.</p>}
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={handlePwSubmit}
+                  className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
+                >
+                  Openen
+                </button>
+                <button
+                  onClick={() => setAskingFor(null)}
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
@@ -106,21 +172,34 @@ const Bestanden = () => {
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-lg font-semibold leading-tight">{f.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-display text-lg font-semibold leading-tight">{f.name}</p>
+                      {f.protected && !unlocked && <Lock className="h-3.5 w-3.5 flex-none text-muted-foreground" />}
+                    </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {f.category}{f.size ? ` · ${f.size}` : ""}{f.updated ? ` · ${f.updated}` : ""}
                     </p>
                   </div>
                 </div>
                 {f.href ? (
-                  <a
-                    href={f.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
-                  >
-                    <Download className="h-4 w-4" /> Openen
-                  </a>
+                  f.protected ? (
+                    <button
+                      onClick={() => handleProtectedClick(f.href!)}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
+                    >
+                      {unlocked ? <Download className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                      {unlocked ? "Openen" : "Beveiligd"}
+                    </button>
+                  ) : (
+                    <a
+                      href={f.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
+                    >
+                      <Download className="h-4 w-4" /> Openen
+                    </a>
+                  )
                 ) : (
                   <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
                     <Download className="h-4 w-4" /> Downloaden
