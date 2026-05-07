@@ -4,7 +4,7 @@ import { Clock, Lock, Pencil, Plus, Trash2, Check, X } from "lucide-react";
 
 const PASSWORD = "nietvoorleerlingen";
 const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "sb_publishable_RTglOvHZz7tV68uVggfAWg_LEERCBXU";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
 const ROW_ID = 1;
 
 type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
