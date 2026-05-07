@@ -111,9 +111,9 @@ const Tekstbord = () => {
 type Light = "rood" | "oranje" | "groen";
 
 const lights: { color: Light; label: string; bg: string; glow: string }[] = [
-  { color: "rood",   label: "Stop — stil zijn",        bg: "#ef4444", glow: "0 0 40px 10px #ef444488" },
-  { color: "oranje", label: "Bijna — afronden",        bg: "#f97316", glow: "0 0 40px 10px #f9731688" },
-  { color: "groen",  label: "Ga — je mag werken/praten", bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
+  { color: "rood",   label: "Je werkt stil. Even geen vragen aan de meester.",             bg: "#ef4444", glow: "0 0 40px 10px #ef444488" },
+  { color: "oranje", label: "Je werkt stil. Stel je vraag alleen aan de meester.",         bg: "#f97316", glow: "0 0 40px 10px #f9731688" },
+  { color: "groen",  label: "Met een fluisterstem samenwerken met schoudermaatje.", bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
 ];
 
 const Stoplicht = () => {
