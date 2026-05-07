@@ -18,7 +18,7 @@ type Tile = {
 };
 
 const tiles: Tile[] = [
-  { title: "Whiteboard", desc: "Samen tekenen & uitleggen", icon: PencilLine, href: "/whiteboard", tone: "ink" },
+  { title: "Whiteboard", desc: "Samen tekenen & uitleggen", icon: PencilLine, href: "https://livecloud.online/nl/whiteboard", external: true, tone: "ink" },
   { title: "Planning",   desc: "Het rooster van vandaag",   icon: CalendarDays, href: "/planning",  tone: "coral" },
   { title: "Bestanden",  desc: "Werkbladen & bronnen",      icon: FolderOpen,   href: "/bestanden", tone: "cream" },
   { title: "Bijbel",     desc: "Tekst voor de dag",         icon: BookOpen,     href: "https://www.debijbel.nl/", external: true, tone: "sage" },
