@@ -8,6 +8,7 @@ import Planning from "./pages/Planning.tsx";
 import Bestanden from "./pages/Bestanden.tsx";
 import Quotes from "./pages/Quotes.tsx";
 import Klastools from "./pages/Klastools.tsx";
+import Focus from "./pages/Focus.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/bestanden" element={<Bestanden />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/klastools" element={<Klastools />} />
+          <Route path="/focus" element={<Focus />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

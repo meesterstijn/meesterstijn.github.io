@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench,
+  PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
   Puzzle, Crown, Music2, Youtube, Radio, Image as ImageIcon,
   ArrowUpRight,
   type LucideIcon,
@@ -24,6 +24,7 @@ const tiles: Tile[] = [
   { title: "Bijbel",     desc: "Tekst voor de dag",         icon: BookOpen,     href: "https://www.debijbel.nl/", external: true, tone: "sage" },
   { title: "Tools",      desc: "Vertaler & handige links",  icon: Wrench,       href: "#tools",     tone: "cream" },
   { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "amber" },
+  { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
   { title: "Spellen",    desc: "Pauzespellen",              icon: Puzzle,       href: "#spellen",   tone: "cream" },
   { title: "Schaken",    desc: "Een potje schaak",          icon: Crown,        href: "https://www.chess.com/home", external: true, tone: "ink" },
 ];
