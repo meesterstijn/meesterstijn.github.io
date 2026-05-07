@@ -85,20 +85,36 @@ const Timer = () => {
 
 // ─── TEKSTBORD ───────────────────────────────────────────────────────────────
 
+const presets = [
+  { label: "Goedemorgen", text: "Wat fijn dat jij er bent.\nOm half 9 gaan we beginnen met stillezen." },
+  { label: "Klaar?",      text: "Ben je klaar? Dan: " },
+];
+
 const Tekstbord = () => {
   const [text, setText] = useState("");
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tekstbord</p>
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft flex flex-col gap-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tekstbord</p>
+      <div className="flex flex-wrap gap-2">
+        {presets.map(p => (
+          <button
+            key={p.label}
+            onClick={() => setText(p.text)}
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent hover:text-accent"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder="Schrijf hier een opdracht, vraag of mededeling voor de klas…"
-        className="h-48 w-full resize-none rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
+        className="h-36 w-full resize-none rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
       />
       {text && (
-        <div className="mt-4 rounded-xl border border-border bg-muted/30 p-4">
+        <div className="rounded-xl border border-border bg-muted/30 p-4">
           <p className="font-display text-lg font-medium leading-relaxed whitespace-pre-wrap">{text}</p>
         </div>
       )}
