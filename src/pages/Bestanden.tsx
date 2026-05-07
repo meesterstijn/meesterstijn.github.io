@@ -12,7 +12,6 @@ type FileItem = {
   size: string;
   updated: string;
   href?: string;
-  protected?: boolean;
 };
 
 const files: FileItem[] = [
@@ -23,12 +22,12 @@ const files: FileItem[] = [
   { name: "Leren leren",                     category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
   { name: "Nucleaire Fysica",                category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1jFjsQx18LW1WzzCcZlHxjvsRObp3LsT_/view?usp=sharing" },
   { name: "Binas",                           category: "Eigen onderwerpen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gPl0KXNBzLCNqxfRdLgWIkZ0ZIfuFvue/view?usp=sharing" },
-  { name: "Algoritmes leerkrachtinstructie", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gJlbdMDD4l8zOhKUm4S2ngdE9SJDKQ1H/view?usp=sharing", protected: true },
+  { name: "Algoritmes leerkrachtinstructie", category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1gJlbdMDD4l8zOhKUm4S2ngdE9SJDKQ1H/view?usp=sharing" },
   { name: "Algoritmes werkbladen",           category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1XfFuXm3A2aMARWr87m3e15G_IAei23Mh/view?usp=sharing" },
   { name: "Binaire getallen spel",           category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1OTord8s1-OH-KHF3aIgOQl6afETUUzTI/view?usp=sharing" },
-  { name: "Encryptie leerkrachtinstructie",  category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing", protected: true },
+  { name: "Encryptie leerkrachtinstructie",  category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1qDKGe5HjNPjQIYaNiJj4RX5rAyO_mMlB/view?usp=sharing" },
   { name: "Encryptie werkbladen",            category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1xn3zZfFsUogb-Z9hc5KseljhDFGsefdX/view?usp=sharing" },
-  { name: "Internet leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing", protected: true },
+  { name: "Internet leerkrachtinstructie",   category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1NkDZbpM9w7A6AeYku62cKyt6TF5ISyqX/view?usp=sharing" },
   { name: "Internet werkbladen",             category: "ICT Lessen", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1BbBcQewizdaxEVCY1nCC0fsx5Pmx-NP-/view?usp=sharing" },
   { name: "Rekentijgers groep 7 deel A",     category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/1ZKEbpC4hVozEQ_yBveHkapiTy7axGTo1/view?usp=sharing" },
   { name: "Rekentijgers groep 7 deel B",     category: "Rekentijgers", type: "pdf", size: "", updated: "", href: "https://drive.google.com/file/d/13rPYsbq5in0OZkh0xVAHl0IkNmMoc_QN/view?usp=sharing" },
@@ -50,31 +49,20 @@ const Bestanden = () => {
   const [cat, setCat] = useState<(typeof categories)[number]>("Alle");
   const [q, setQ] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
-  const [askingFor, setAskingFor] = useState<string | null>(null);
 
   const filtered = files.filter(
-    (f) =>
-      (cat === "Alle" || f.category === cat) &&
-      f.name.toLowerCase().includes(q.toLowerCase())
+    (f) => (cat === "Alle" || f.category === cat) && f.name.toLowerCase().includes(q.toLowerCase())
   );
 
-  const handleProtectedClick = (href: string) => {
-    if (unlocked) {
-      window.open(href, "_blank");
-    } else {
-      setAskingFor(href);
-      setPwInput("");
-      setPwError(false);
-    }
-  };
-
-  const handlePwSubmit = () => {
+  const handleUnlock = () => {
     if (pwInput === PASSWORD) {
       setUnlocked(true);
-      setAskingFor(null);
-      window.open(askingFor!, "_blank");
+      setShowPw(false);
+      setPwInput("");
+      setPwError(false);
     } else {
       setPwError(true);
     }
@@ -84,46 +72,54 @@ const Bestanden = () => {
     <div className="min-h-screen bg-paper bg-warm">
       <SiteHeader />
       <main className="container py-10 md:py-14">
-        <div className="mb-8 max-w-2xl animate-fade-up">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Bibliotheek</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Bestanden</h1>
-          <p className="mt-3 text-muted-foreground">
-            Werkbladen, leesteksten en bronnen, geordend per vak.
-          </p>
+
+        {/* Header */}
+        <div className="mb-8 animate-fade-up flex items-start justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Bibliotheek</p>
+            <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Bestanden</h1>
+            <p className="mt-3 text-muted-foreground">Werkbladen, leesteksten en bronnen, geordend per vak.</p>
+          </div>
+          {!unlocked ? (
+            <button
+              onClick={() => setShowPw(true)}
+              className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
+            >
+              <Lock className="h-4 w-4" /> Ontgrendelen
+            </button>
+          ) : (
+            <span className="mt-4 flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
+              <Download className="h-4 w-4" /> Toegang verleend
+            </span>
+          )}
         </div>
 
         {/* Wachtwoordscherm */}
-        {askingFor && (
+        {showPw && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-tile">
               <div className="mb-4 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
                   <Lock className="h-5 w-5" />
                 </span>
-                <p className="font-display text-xl font-semibold">Beveiligd bestand</p>
+                <p className="font-display text-xl font-semibold">Bestanden ontgrendelen</p>
               </div>
-              <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om dit bestand te openen.</p>
+              <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om alle bestanden te openen.</p>
               <input
                 type="password"
                 value={pwInput}
                 onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
-                onKeyDown={(e) => e.key === "Enter" && handlePwSubmit()}
+                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
                 placeholder="Wachtwoord"
                 autoFocus
                 className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
               />
               {pwError && <p className="mt-2 text-xs text-destructive">Wachtwoord onjuist.</p>}
               <div className="mt-4 flex gap-2">
-                <button
-                  onClick={handlePwSubmit}
-                  className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
-                >
-                  Openen
+                <button onClick={handleUnlock} className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90">
+                  Ontgrendelen
                 </button>
-                <button
-                  onClick={() => setAskingFor(null)}
-                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
-                >
+                <button onClick={() => setShowPw(false)} className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent">
                   Annuleren
                 </button>
               </div>
@@ -131,6 +127,15 @@ const Bestanden = () => {
           </div>
         )}
 
+        {/* Vergrendeld scherm */}
+        {!unlocked && (
+          <div className="mb-8 flex items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-5 text-muted-foreground">
+            <Lock className="h-5 w-5 shrink-0" />
+            <p className="text-sm">Klik op "Ontgrendelen" rechtsboven om toegang te krijgen tot alle bestanden.</p>
+          </div>
+        )}
+
+        {/* Filters + zoeken */}
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => (
@@ -158,6 +163,7 @@ const Bestanden = () => {
           </div>
         </div>
 
+        {/* Bestanden */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((f, i) => {
             const Icon = iconFor(f.type);
@@ -172,38 +178,25 @@ const Bestanden = () => {
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate font-display text-lg font-semibold leading-tight">{f.name}</p>
-                      {f.protected && !unlocked && <Lock className="h-3.5 w-3.5 flex-none text-muted-foreground" />}
-                    </div>
+                    <p className="truncate font-display text-lg font-semibold leading-tight">{f.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {f.category}{f.size ? ` · ${f.size}` : ""}{f.updated ? ` · ${f.updated}` : ""}
                     </p>
                   </div>
                 </div>
-                {f.href ? (
-                  f.protected ? (
-                    <button
-                      onClick={() => handleProtectedClick(f.href!)}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
-                    >
-                      {unlocked ? <Download className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                      {unlocked ? "Openen" : "Beveiligd"}
-                    </button>
-                  ) : (
-                    <a
-                      href={f.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
-                    >
-                      <Download className="h-4 w-4" /> Openen
-                    </a>
-                  )
+                {unlocked && f.href ? (
+                  <a
+                    href={f.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground"
+                  >
+                    <Download className="h-4 w-4" /> Openen
+                  </a>
                 ) : (
-                  <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium transition-smooth group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
-                    <Download className="h-4 w-4" /> Downloaden
-                  </button>
+                  <div className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                    <Lock className="h-4 w-4" /> Vergrendeld
+                  </div>
                 )}
               </article>
             );
