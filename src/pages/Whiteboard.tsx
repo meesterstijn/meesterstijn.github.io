@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload, Wrench } from "lucide-react";
 
-const COLORS = ["#4682B4", "#10B981", "#F59E0B", "#EF4444", "#7C3AED", "#000000", "#ffffff"];
+const COLORS = ["#4682B4", "#10B981", "#F49E4C", "#AB3428", "#7C3AED", "#000000", "#ffffff"];
 const SIZES = [3, 6, 12, 20];
 const ERASER_RADIUS = 28;
 const LINE_SPACING = 52;
