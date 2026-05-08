@@ -22,7 +22,7 @@ const tiles: Tile[] = [
   { title: "Planning",   desc: "Het rooster van vandaag",   icon: CalendarDays, href: "/planning",  tone: "coral" },
   { title: "Bestanden",  desc: "Werkbladen & bronnen",      icon: FolderOpen,   href: "/bestanden", tone: "cream" },
   { title: "Bijbel",     desc: "Tekst voor de dag",         icon: BookOpen,     href: "https://www.debijbel.nl/", external: true, tone: "sage" },
-  { title: "Tools",      desc: "Vertaler & handige links",  icon: Wrench,       href: "#tools",     tone: "cream" },
+  { title: "Tools",      desc: "Tijdlijn & handige hulpmiddelen",  icon: Wrench,       href: "/tools",     tone: "cream" },
   { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "coral" },
   { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
   { title: "Spellen",    desc: "Pauzespellen",              icon: Puzzle,       href: "#spellen",   tone: "cream" },
