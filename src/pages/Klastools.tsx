@@ -4,7 +4,10 @@ import { Play, Pause, RotateCcw, Plus, Minus } from "lucide-react";
 
 // ─── TIMER ───────────────────────────────────────────────────────────────────
 
+const timerPresets = [5, 10, 15, 20, 30];
+
 const Timer = () => {
+  const [totalSeconds, setTotalSeconds] = useState(5 * 60);
   const [seconds, setSeconds] = useState(5 * 60);
   const [running, setRunning] = useState(false);
   const interval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -19,17 +22,26 @@ const Timer = () => {
     return () => { if (interval.current) clearInterval(interval.current); };
   }, [running, seconds]);
 
+  const setTimer = (minutes: number) => {
+    setRunning(false);
+    setTotalSeconds(minutes * 60);
+    setSeconds(minutes * 60);
+  };
+
+  const adjust = (delta: number) => {
+    if (running) return;
+    const next = Math.max(60, totalSeconds + delta);
+    setTotalSeconds(next);
+    setSeconds(next);
+  };
+
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  const pct = seconds / (5 * 60);
+  const pct = totalSeconds > 0 ? seconds / totalSeconds : 0;
   const danger = seconds <= 60 && seconds > 0;
   const done = seconds === 0;
 
-  const adjust = (delta: number) => {
-    if (!running) setSeconds(s => Math.max(0, s + delta));
-  };
-
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+    <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
       <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Timer</p>
       <div className="flex flex-col items-center gap-6">
         {/* Cirkel */}
@@ -55,15 +67,27 @@ const Timer = () => {
           </div>
         </div>
 
-        {/* Tijd aanpassen */}
-        <div className="flex items-center gap-3">
-          <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent"><Minus className="h-4 w-4" /></button>
-          <span className="w-16 text-center text-sm text-muted-foreground">1 min</span>
-          <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent"><Plus className="h-4 w-4" /></button>
+        {/* Preset knoppen */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {timerPresets.map(min => (
+            <button
+              key={min}
+              onClick={() => setTimer(min)}
+              className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition-smooth hover:border-accent hover:text-accent ${
+                totalSeconds === min * 60 && !done
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card"
+              }`}
+            >
+              {min} min
+            </button>
+          ))}
         </div>
 
         {/* Knoppen */}
         <div className="flex gap-3">
+          <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Minus className="h-4 w-4" /></button>
+          <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Plus className="h-4 w-4" /></button>
           <button
             onClick={() => setRunning(r => !r)}
             className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
@@ -72,7 +96,7 @@ const Timer = () => {
             {running ? "Pauzeer" : "Start"}
           </button>
           <button
-            onClick={() => { setRunning(false); setSeconds(5 * 60); }}
+            onClick={() => { setRunning(false); setSeconds(totalSeconds); }}
             className="flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
           >
             <RotateCcw className="h-4 w-4" />
@@ -92,9 +116,17 @@ const presets = [
 
 const Tekstbord = () => {
   const [text, setText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [text]);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft flex flex-col gap-4">
+    <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft flex flex-col gap-4">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tekstbord</p>
       <div className="flex flex-wrap gap-2">
         {presets.map(p => (
@@ -108,12 +140,12 @@ const Tekstbord = () => {
         ))}
       </div>
       <textarea
+        ref={textareaRef}
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder="Schrijf hier een opdracht, vraag of mededeling voor de klas…"
-        className="h-36 w-full resize-none rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
+        className="min-h-36 max-h-[60vh] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
       />
-
     </div>
   );
 };
@@ -132,7 +164,7 @@ const Stoplicht = () => {
   const [active, setActive] = useState<Light | null>(null);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+    <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
       <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Stoplicht</p>
       <div className="flex flex-col items-center gap-4">
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-5">
@@ -167,14 +199,9 @@ const Klastools = () => (
   <div className="min-h-screen bg-paper bg-warm">
     <SiteHeader />
     <main className="container py-10 md:py-14">
-      <div className="mb-10 max-w-2xl animate-fade-up">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Hulpmiddelen</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Klastools</h1>
-        <p className="mt-3 text-muted-foreground">Timer, tekstbord en stoplicht voor in de klas.</p>
-      </div>
-      <div className="grid gap-6 md:grid-cols-3">
+<div className="grid gap-6 md:grid-cols-4">
         <Timer />
-        <Tekstbord />
+        <div className="md:col-span-2 h-full"><Tekstbord /></div>
         <Stoplicht />
       </div>
     </main>

@@ -1,0 +1,111 @@
+/* Meester Stijn — warm, modern classroom dashboard
+   Palette: deep ink + cream, with a warm coral/amber accent
+   Type: Fraunces (display serif) + Inter (body) */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer base {
+  :root {
+    --background: 38 38% 96%;          /* warm cream */
+    --foreground: 222 30% 12%;         /* deep ink */
+
+    --card: 38 50% 98%;
+    --card-foreground: 222 30% 12%;
+
+    --popover: 38 50% 98%;
+    --popover-foreground: 222 30% 12%;
+
+    --primary: 222 35% 14%;            /* near-black ink */
+    --primary-foreground: 38 38% 96%;
+
+    --secondary: 35 30% 90%;
+    --secondary-foreground: 222 35% 14%;
+
+    --muted: 35 25% 92%;
+    --muted-foreground: 222 12% 38%;
+
+    --accent: 14 78% 58%;              /* warm coral */
+    --accent-foreground: 38 50% 98%;
+
+    --highlight: 38 92% 56%;           /* amber */
+    --highlight-foreground: 222 35% 14%;
+
+    --sage: 152 26% 48%;               /* sage green */
+    --sage-foreground: 38 50% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 38 50% 98%;
+
+    --border: 35 20% 84%;
+    --input: 35 20% 84%;
+    --ring: 14 78% 58%;
+
+    --radius: 1rem;
+
+    /* Gradients & shadows */
+    --gradient-warm: radial-gradient(circle at 20% 0%, hsl(14 78% 58% / 0.18), transparent 55%),
+                     radial-gradient(circle at 90% 100%, hsl(38 92% 56% / 0.18), transparent 55%);
+    --gradient-ink: linear-gradient(135deg, hsl(222 35% 14%), hsl(222 30% 22%));
+    --shadow-soft: 0 1px 2px hsl(222 30% 12% / 0.04), 0 8px 24px -8px hsl(222 30% 12% / 0.12);
+    --shadow-tile: 0 2px 4px hsl(222 30% 12% / 0.06), 0 16px 40px -16px hsl(222 30% 12% / 0.18);
+    --transition-smooth: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dark {
+    --background: 222 30% 8%;
+    --foreground: 38 38% 94%;
+    --card: 222 28% 12%;
+    --card-foreground: 38 38% 94%;
+    --popover: 222 28% 12%;
+    --popover-foreground: 38 38% 94%;
+    --primary: 38 38% 94%;
+    --primary-foreground: 222 30% 8%;
+    --secondary: 222 22% 18%;
+    --secondary-foreground: 38 38% 94%;
+    --muted: 222 22% 16%;
+    --muted-foreground: 38 12% 65%;
+    --accent: 14 78% 60%;
+    --accent-foreground: 222 30% 8%;
+    --highlight: 38 92% 60%;
+    --highlight-foreground: 222 30% 8%;
+    --sage: 152 26% 52%;
+    --sage-foreground: 222 30% 8%;
+    --border: 222 22% 20%;
+    --input: 222 22% 20%;
+    --ring: 14 78% 60%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .bg-warm { background-image: var(--gradient-warm); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-tile { box-shadow: var(--shadow-tile); }
+  .transition-smooth { transition: var(--transition-smooth); }
+
+  /* Subtle paper grain */
+  .bg-paper {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(hsl(222 30% 12% / 0.025) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}

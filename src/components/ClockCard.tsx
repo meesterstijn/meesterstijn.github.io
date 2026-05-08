@@ -22,7 +22,7 @@ export const ClockCard = () => {
   const dateStr = `${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-primary p-8 text-primary-foreground shadow-tile md:p-12">
+    <div className="relative h-full overflow-hidden rounded-3xl bg-primary p-8 text-primary-foreground shadow-tile md:p-12">
       <div
         className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
         style={{ background: "hsl(var(--accent))" }}
@@ -31,15 +31,17 @@ export const ClockCard = () => {
         className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full opacity-20 blur-3xl"
         style={{ background: "hsl(var(--highlight))" }}
       />
-      <div className="relative">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground/60">
-          Vandaag is het
-        </p>
-        <p className="mt-2 font-display text-3xl font-medium capitalize md:text-4xl">
-          {day}
-        </p>
-        <p className="text-primary-foreground/70">{dateStr}</p>
-        <div className="mt-8 flex items-end gap-2 font-display text-7xl font-semibold tabular-nums leading-none md:text-[8rem]">
+      <div className="relative flex items-center justify-between gap-6">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground/60">
+            Vandaag is het
+          </p>
+          <p className="mt-2 font-display text-3xl font-medium capitalize md:text-4xl">
+            {day}
+          </p>
+          <p className="text-primary-foreground/70">{dateStr}</p>
+        </div>
+        <div className="flex items-end gap-2 font-display text-7xl font-semibold tabular-nums leading-none md:text-[8rem]">
           <span>{hh}</span>
           <span className="text-accent">:</span>
           <span>{mm}</span>

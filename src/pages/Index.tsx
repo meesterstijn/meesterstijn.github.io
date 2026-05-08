@@ -18,12 +18,12 @@ type Tile = {
 };
 
 const tiles: Tile[] = [
-  { title: "Whiteboard", desc: "Samen tekenen & uitleggen", icon: PencilLine, href: "https://livecloud.online/nl/whiteboard", external: true, tone: "ink" },
+  { title: "Whiteboard", desc: "Samen tekenen & uitleggen", icon: PencilLine, href: "/whiteboard", tone: "ink" },
   { title: "Planning",   desc: "Het rooster van vandaag",   icon: CalendarDays, href: "/planning",  tone: "coral" },
   { title: "Bestanden",  desc: "Werkbladen & bronnen",      icon: FolderOpen,   href: "/bestanden", tone: "cream" },
   { title: "Bijbel",     desc: "Tekst voor de dag",         icon: BookOpen,     href: "https://www.debijbel.nl/", external: true, tone: "sage" },
   { title: "Tools",      desc: "Vertaler & handige links",  icon: Wrench,       href: "#tools",     tone: "cream" },
-  { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "amber" },
+  { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "coral" },
   { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
   { title: "Spellen",    desc: "Pauzespellen",              icon: Puzzle,       href: "#spellen",   tone: "cream" },
   { title: "Schaken",    desc: "Een potje schaak",          icon: Crown,        href: "https://www.chess.com/home", external: true, tone: "ink" },
@@ -52,12 +52,12 @@ const Index = () => {
       <main className="container py-10 md:py-14">
         {/* Hero grid */}
         <div className="grid gap-6 lg:grid-cols-5">
-          <div className="animate-fade-up lg:col-span-3">
+          <div className="animate-fade-up lg:col-span-3 h-full">
             <ClockCard />
           </div>
 
-          <div className="flex flex-col gap-4 lg:col-span-2">
-            <div className="animate-fade-up rounded-3xl border border-border bg-card p-6 shadow-soft" style={{ animationDelay: "80ms" }}>
+          <div className="animate-fade-up h-full lg:col-span-2" style={{ animationDelay: "80ms" }}>
+            <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Snelle links
               </p>
@@ -76,14 +76,6 @@ const Index = () => {
                   </a>
                 ))}
               </div>
-            </div>
-
-            <div className="animate-fade-up rounded-3xl border border-border bg-gradient-to-br from-accent/15 via-card to-highlight/15 p-6 shadow-soft" style={{ animationDelay: "160ms" }}>
-              <p className="font-display text-lg font-medium leading-snug">
-                "Onderwijs is het ontsteken van een vlam,
-                niet het vullen van een vat."
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground">— Socrates</p>
             </div>
           </div>
         </div>

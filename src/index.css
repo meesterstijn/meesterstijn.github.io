@@ -1,5 +1,5 @@
 /* Meester Stijn — warm, modern classroom dashboard
-   Palette: deep ink + cream, with a warm coral/amber accent
+   Palette: #97DB4F · #DBD56E · #88AB75 · #DE8F6E · #3B1F2B
    Type: Fraunces (display serif) + Inter (body) */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -11,73 +11,73 @@
 
 @layer base {
   :root {
-    --background: 38 38% 96%;          /* warm cream */
-    --foreground: 222 30% 12%;         /* deep ink */
+    --background: 334 10% 97%;         /* zeer licht warm */
+    --foreground: 334 31% 14%;         /* #3B1F2B donker bordeaux */
 
-    --card: 38 50% 98%;
-    --card-foreground: 222 30% 12%;
+    --card: 334 8% 99%;
+    --card-foreground: 334 31% 14%;
 
-    --popover: 38 50% 98%;
-    --popover-foreground: 222 30% 12%;
+    --popover: 334 8% 99%;
+    --popover-foreground: 334 31% 14%;
 
-    --primary: 222 35% 14%;            /* near-black ink */
-    --primary-foreground: 38 38% 96%;
+    --primary: 177 12% 32%;            /* #475B5A donker gedempte teal */
+    --primary-foreground: 334 10% 97%;
 
-    --secondary: 35 30% 90%;
-    --secondary-foreground: 222 35% 14%;
+    --secondary: 99 15% 90%;
+    --secondary-foreground: 334 31% 14%;
 
-    --muted: 35 25% 92%;
-    --muted-foreground: 222 12% 38%;
+    --muted: 334 8% 93%;
+    --muted-foreground: 334 15% 44%;
 
-    --accent: 14 78% 58%;              /* warm coral */
-    --accent-foreground: 38 50% 98%;
+    --accent: 18 55% 48%;              /* #DE8F6E koraal/terracotta verdiept */
+    --accent-foreground: 334 10% 97%;
 
-    --highlight: 38 92% 56%;           /* amber */
-    --highlight-foreground: 222 35% 14%;
+    --highlight: 89 66% 58%;           /* #97DB4F lime groen */
+    --highlight-foreground: 334 10% 97%;
 
-    --sage: 152 26% 48%;               /* sage green */
-    --sage-foreground: 38 50% 98%;
+    --sage: 99 24% 56%;                /* #88AB75 salie groen */
+    --sage-foreground: 334 10% 97%;
 
     --destructive: 0 70% 50%;
-    --destructive-foreground: 38 50% 98%;
+    --destructive-foreground: 334 10% 97%;
 
-    --border: 35 20% 84%;
-    --input: 35 20% 84%;
-    --ring: 14 78% 58%;
+    --border: 334 8% 86%;
+    --input: 334 8% 86%;
+    --ring: 177 12% 32%;
 
     --radius: 1rem;
 
     /* Gradients & shadows */
-    --gradient-warm: radial-gradient(circle at 20% 0%, hsl(14 78% 58% / 0.18), transparent 55%),
-                     radial-gradient(circle at 90% 100%, hsl(38 92% 56% / 0.18), transparent 55%);
-    --gradient-ink: linear-gradient(135deg, hsl(222 35% 14%), hsl(222 30% 22%));
-    --shadow-soft: 0 1px 2px hsl(222 30% 12% / 0.04), 0 8px 24px -8px hsl(222 30% 12% / 0.12);
-    --shadow-tile: 0 2px 4px hsl(222 30% 12% / 0.06), 0 16px 40px -16px hsl(222 30% 12% / 0.18);
+    --gradient-warm: radial-gradient(circle at 20% 0%, hsl(18 55% 48% / 0.12), transparent 55%),
+                     radial-gradient(circle at 90% 100%, hsl(57 60% 65% / 0.16), transparent 55%);
+    --gradient-ink: linear-gradient(135deg, hsl(177 12% 32%), hsl(177 12% 22%));
+    --shadow-soft: 0 1px 2px hsl(334 31% 14% / 0.05), 0 8px 24px -8px hsl(334 31% 14% / 0.12);
+    --shadow-tile: 0 2px 4px hsl(334 31% 14% / 0.07), 0 16px 40px -16px hsl(334 31% 14% / 0.18);
     --transition-smooth: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .dark {
-    --background: 222 30% 8%;
-    --foreground: 38 38% 94%;
-    --card: 222 28% 12%;
-    --card-foreground: 38 38% 94%;
-    --popover: 222 28% 12%;
-    --popover-foreground: 38 38% 94%;
-    --primary: 38 38% 94%;
-    --primary-foreground: 222 30% 8%;
-    --secondary: 222 22% 18%;
-    --secondary-foreground: 38 38% 94%;
-    --muted: 222 22% 16%;
-    --muted-foreground: 38 12% 65%;
-    --accent: 14 78% 60%;
-    --accent-foreground: 222 30% 8%;
-    --highlight: 38 92% 60%;
-    --highlight-foreground: 222 30% 8%;
-    --sage: 152 26% 52%;
-    --sage-foreground: 222 30% 8%;
-    --border: 222 22% 20%;
-    --input: 222 22% 20%;
-    --ring: 14 78% 60%;
+    --background: 334 25% 9%;
+    --foreground: 334 10% 94%;
+    --card: 334 20% 13%;
+    --card-foreground: 334 10% 94%;
+    --popover: 334 20% 13%;
+    --popover-foreground: 334 10% 94%;
+    --primary: 334 10% 88%;
+    --primary-foreground: 334 25% 9%;
+    --secondary: 334 15% 20%;
+    --secondary-foreground: 334 10% 94%;
+    --muted: 334 15% 18%;
+    --muted-foreground: 334 10% 60%;
+    --accent: 18 55% 56%;
+    --accent-foreground: 334 25% 9%;
+    --highlight: 89 55% 50%;
+    --highlight-foreground: 334 25% 9%;
+    --sage: 99 22% 48%;
+    --sage-foreground: 334 25% 9%;
+    --border: 334 15% 22%;
+    --input: 334 15% 22%;
+    --ring: 18 55% 56%;
   }
 }
 
@@ -105,7 +105,7 @@
   .bg-paper {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(hsl(222 30% 12% / 0.025) 1px, transparent 1px);
+      radial-gradient(hsl(334 31% 14% / 0.025) 1px, transparent 1px);
     background-size: 22px 22px;
   }
 }
