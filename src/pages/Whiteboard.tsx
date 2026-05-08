@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload, Wrench } from "lucide-react";
 
 const COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#7C3AED", "#000000", "#ffffff"];
-const SIZES = [3, 6, 12, 20, 32];
+const SIZES = [3, 6, 12, 20];
 const ERASER_RADIUS = 28;
 const LINE_SPACING = 52;
 const MARGIN_X = 180;
@@ -218,6 +219,14 @@ const TimerContent = () => {
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>
+
+      <Link
+        to="/focus"
+        className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium transition-smooth hover:border-accent hover:text-accent"
+      >
+        <Clock className="h-4 w-4" />
+        Focus pagina openen
+      </Link>
     </div>
   );
 };
@@ -526,11 +535,23 @@ const Whiteboard = () => {
     }
   };
 
+  const saveStrokes = () => {
+    try { sessionStorage.setItem("wb_strokes", JSON.stringify(strokes.current)); } catch {}
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    try {
+      const saved = sessionStorage.getItem("wb_strokes");
+      if (saved) {
+        strokes.current = JSON.parse(saved);
+        redraw(ctx, canvas);
+        return;
+      }
+    } catch {}
     drawBackground(ctx, canvas, false);
   }, []);
 
@@ -588,19 +609,22 @@ const Whiteboard = () => {
     } else if (tool === "eraser") {
       const before = strokes.current.length;
       strokes.current = strokes.current.filter(s => !strokeHit(s, pos, ERASER_RADIUS));
-      if (strokes.current.length !== before) redraw(ctx, canvas);
+      if (strokes.current.length !== before) { redraw(ctx, canvas); saveStrokes(); }
     }
   };
 
   const stopDraw = () => {
-    if (tool === "pen" && currentStroke.current && currentStroke.current.points.length > 0)
+    if (tool === "pen" && currentStroke.current && currentStroke.current.points.length > 0) {
       strokes.current.push(currentStroke.current);
+      saveStrokes();
+    }
     currentStroke.current = null;
     drawing.current = false;
   };
 
   const clear = () => {
     strokes.current = [];
+    saveStrokes();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -835,7 +859,8 @@ const Whiteboard = () => {
           onClick={() => setShowToolsMenu(v => !v)}
           className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showToolsMenu ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
         >
-          🧰 Tools
+          <Wrench className="h-4 w-4" />
+          Tools
         </button>
 
       </div>
