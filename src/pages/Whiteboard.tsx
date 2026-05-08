@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type } from "lucide-react";
 
 const COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#7C3AED", "#000000", "#ffffff"];
 const SIZES = [3, 6, 12, 20, 32];
@@ -222,6 +222,34 @@ const TimerContent = () => {
   );
 };
 
+// ─── TekstContent ─────────────────────────────────────────────────────────────
+
+const TekstContent = () => {
+  const [text, setText] = useState("");
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [text]);
+
+  return (
+    <div className="flex flex-col gap-3 p-4" style={{ width: 280 }}>
+      <textarea
+        ref={ref}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Typ hier…"
+        rows={3}
+        className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-accent overflow-hidden"
+        style={{ fontSize: 16, lineHeight: 1.3, minHeight: 80, maxHeight: 320, overflowY: "auto" }}
+      />
+    </div>
+  );
+};
+
 // ─── Whiteboard ───────────────────────────────────────────────────────────────
 
 const Whiteboard = () => {
@@ -232,6 +260,7 @@ const Whiteboard = () => {
   const [lined, setLinedState] = useState(false);
   const [showStoplicht, setShowStoplicht] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
+  const [showTekst, setShowTekst] = useState(false);
   const linedRef = useRef(false);
   const drawing = useRef(false);
   const strokes = useRef<Stroke[]>([]);
@@ -348,97 +377,11 @@ const Whiteboard = () => {
     <div className="overflow-hidden bg-paper bg-warm flex flex-col" style={{ height: "100dvh" }}>
       <SiteHeader />
 
-      <main className="container py-6 flex flex-col flex-1 overflow-hidden">
-        {/* Toolbar */}
-        <div className="animate-fade-up mb-3 flex items-center gap-3 overflow-x-auto rounded-2xl border border-border bg-card p-3 shadow-soft shrink-0" style={{ animationDelay: "60ms" }}>
-          {/* Colors */}
-          <div className="flex gap-1.5">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => { setColor(c); setTool("pen"); }}
-                style={{ backgroundColor: c }}
-                className={`h-7 w-7 rounded-full border-2 transition-smooth hover:scale-110 ${color === c && tool === "pen" ? "border-primary scale-110" : "border-border"}`}
-              />
-            ))}
-          </div>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Sizes */}
-          <div className="flex items-center gap-2">
-            {SIZES.map((s) => (
-              <button
-                key={s}
-                onClick={() => { setSize(s); setTool("pen"); }}
-                className={`flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${size === s && tool === "pen" ? "border-primary bg-primary/10" : "border-border"}`}
-                style={{ width: 36, height: 36 }}
-              >
-                <span style={{ width: Math.min(s, 28), height: Math.min(s, 28), borderRadius: "50%", backgroundColor: "#000000", display: "block" }} />
-              </button>
-            ))}
-          </div>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Eraser */}
-          <button
-            onClick={() => setTool(t => t === "eraser" ? "pen" : "eraser")}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${tool === "eraser" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-          >
-            <Eraser className="h-4 w-4" />
-            Gum
-          </button>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Clear */}
-          <button
-            onClick={clear}
-            className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-destructive transition-smooth hover:border-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            Leegmaken
-          </button>
-
-          {/* Lined */}
-          <button
-            onClick={toggleLined}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${lined ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-          >
-            <BookOpen className="h-4 w-4" />
-            Schrift
-          </button>
-
-          <div className="h-6 w-px bg-border" />
-
-          {/* Stoplicht toggle */}
-          <button
-            onClick={() => setShowStoplicht(v => !v)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showStoplicht ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-          >
-            <span className="flex gap-0.5">
-              <span className="h-3 w-3 rounded-full bg-red-500" />
-              <span className="h-3 w-3 rounded-full bg-orange-400" />
-              <span className="h-3 w-3 rounded-full bg-green-500" />
-            </span>
-            Stoplicht
-          </button>
-
-          {/* Timer toggle */}
-          <button
-            onClick={() => setShowTimer(v => !v)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-          >
-            <Clock className="h-4 w-4" />
-            Timer
-          </button>
-        </div>
-
+      <main className="container pt-6 pb-20 flex flex-col flex-1 overflow-hidden">
         {/* Canvas wrapper — position:relative so overlays can be positioned inside */}
         <div
           className="animate-fade-up flex-1 rounded-3xl border border-border shadow-soft min-h-0"
-          style={{ position: "relative", overflow: "hidden", animationDelay: "120ms" }}
+          style={{ position: "relative", overflow: "hidden", animationDelay: "60ms" }}
         >
           <canvas
             ref={canvasRef}
@@ -466,8 +409,115 @@ const Whiteboard = () => {
               <TimerContent />
             </DraggableWidget>
           )}
+
+          {showTekst && (
+            <DraggableWidget title="Tekstvak" initialPos={{ x: 540, y: 20 }} onClose={() => setShowTekst(false)}>
+              <TekstContent />
+            </DraggableWidget>
+          )}
         </div>
       </main>
+
+      {/* Toolbar — fixed aan de onderkant, altijd zichtbaar */}
+      <div
+        className="fixed bottom-0 inset-x-0 z-30 overflow-x-auto border-t border-border bg-card/95 backdrop-blur-sm"
+        style={{ paddingTop: "0.75rem", paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+      <div className="mx-auto flex w-fit items-center gap-3 px-4">
+        {/* Colors */}
+        <div className="flex gap-1.5 shrink-0">
+          {COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => { setColor(c); setTool("pen"); }}
+              style={{ backgroundColor: c }}
+              className={`h-7 w-7 rounded-full border-2 transition-smooth hover:scale-110 ${color === c && tool === "pen" ? "border-primary scale-110" : "border-border"}`}
+            />
+          ))}
+        </div>
+
+        <div className="h-6 w-px shrink-0 bg-border" />
+
+        {/* Sizes */}
+        <div className="flex shrink-0 items-center gap-2">
+          {SIZES.map((s) => (
+            <button
+              key={s}
+              onClick={() => { setSize(s); setTool("pen"); }}
+              className={`flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${size === s && tool === "pen" ? "border-primary bg-primary/10" : "border-border"}`}
+              style={{ width: 36, height: 36 }}
+            >
+              <span style={{ width: Math.min(s, 28), height: Math.min(s, 28), borderRadius: "50%", backgroundColor: "#000000", display: "block" }} />
+            </button>
+          ))}
+        </div>
+
+        <div className="h-6 w-px shrink-0 bg-border" />
+
+        {/* Eraser */}
+        <button
+          onClick={() => setTool(t => t === "eraser" ? "pen" : "eraser")}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${tool === "eraser" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          <Eraser className="h-4 w-4" />
+          Gum
+        </button>
+
+        <div className="h-6 w-px shrink-0 bg-border" />
+
+        {/* Clear */}
+        <button
+          onClick={clear}
+          className="shrink-0 flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-medium transition-smooth"
+          style={{ color: "#EEA081" }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Leegmaken
+        </button>
+
+        {/* Lined */}
+        <button
+          onClick={toggleLined}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${lined ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          <BookOpen className="h-4 w-4" />
+          Schrift
+        </button>
+
+        <div className="h-6 w-px shrink-0 bg-border" />
+
+        {/* Stoplicht toggle */}
+        <button
+          onClick={() => setShowStoplicht(v => !v)}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showStoplicht ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          <span className="flex gap-0.5">
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#EEA081" }} />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#FFE48D" }} />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#98F797" }} />
+          </span>
+          Stoplicht
+        </button>
+
+        {/* Timer toggle */}
+        <button
+          onClick={() => setShowTimer(v => !v)}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          <Clock className="h-4 w-4" />
+          Timer
+        </button>
+
+        {/* Tekstvak toggle */}
+        <button
+          onClick={() => setShowTekst(v => !v)}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showTekst ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          <Type className="h-4 w-4" />
+          Tekst
+        </button>
+      </div>
+      </div>
     </div>
   );
 };
