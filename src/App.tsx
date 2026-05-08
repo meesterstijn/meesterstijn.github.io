@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Maximize2, Minimize2 } from "lucide-react";
+import AuthGate from "@/components/AuthGate";
 import Index from "./pages/Index.tsx";
 import Planning from "./pages/Planning.tsx";
 import Bestanden from "./pages/Bestanden.tsx";
@@ -59,6 +60,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AuthGate>
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
@@ -78,6 +80,7 @@ const App = () => (
         <FullscreenButton side="left" />
         <FullscreenButton side="right" />
       </BrowserRouter>
+      </AuthGate>
     </TooltipProvider>
   </QueryClientProvider>
 );

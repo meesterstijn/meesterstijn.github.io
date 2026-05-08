@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Clock, X, Globe, BookOpen, Bookmark } from "lucide-react";
+import { Clock, X, Globe, BookOpen, Bookmark, Hash } from "lucide-react";
 
 const KaartTool      = lazy(() => import("@/components/KaartTool"));
 const SpellingTool   = lazy(() => import("@/components/SpellingTool"));
 const BoekentipsTool = lazy(() => import("@/components/BoekentipsTool"));
+const TafelsTool     = lazy(() => import("@/components/TafelsTool"));
 
 // ─── Canon data ───────────────────────────────────────────────────────────────
 
@@ -349,6 +350,19 @@ const ToolsPage = () => {
                 <p className="mt-1 text-sm text-muted-foreground">Boekenaanbevelingen van leerlingen.</p>
               </div>
             </button>
+
+            <button
+              onClick={() => setOpen("tafels")}
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft text-left transition-smooth hover:-translate-y-1 hover:shadow-tile hover:border-accent"
+            >
+              <div className="rounded-2xl bg-secondary p-3">
+                <Hash className="h-6 w-6 text-primary" strokeWidth={1.6} />
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold">Tafels oefenen</p>
+                <p className="mt-1 text-sm text-muted-foreground">Vermenigvuldigingstafels oefenen via 99math of flitsen.</p>
+              </div>
+            </button>
           </div>
 
           <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
@@ -373,6 +387,12 @@ const ToolsPage = () => {
           <BoekentipsTool onClose={() => setOpen(null)} />
         </Suspense>
       )}
+      {open === "tafels" && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-paper text-muted-foreground">Laden…</div>}>
+          <TafelsTool onClose={() => setOpen(null)} />
+        </Suspense>
+      )}
+
     </>
   );
 };
