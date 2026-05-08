@@ -345,7 +345,7 @@ const Whiteboard = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-paper bg-warm flex flex-col">
+    <div className="overflow-hidden bg-paper bg-warm flex flex-col" style={{ height: "100dvh" }}>
       <SiteHeader />
 
       <main className="container py-6 flex flex-col flex-1 overflow-hidden">

@@ -71,7 +71,7 @@ const Bestanden = () => {
   return (
     <div className="min-h-screen bg-paper bg-warm">
       <SiteHeader />
-      <main className="container py-10 md:py-14">
+      <main className="container py-10 md:py-14 overflow-x-hidden">
 
         {/* Header */}
         <div className="mb-8 animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -170,7 +170,7 @@ const Bestanden = () => {
             return (
               <article
                 key={f.name}
-                className="group animate-tile-in rounded-2xl border border-border bg-card p-5 shadow-soft transition-smooth hover:-translate-y-0.5 hover:shadow-tile"
+                className="group animate-tile-in rounded-2xl border border-border bg-card p-5 shadow-soft transition-smooth hover:-translate-y-0.5 hover:shadow-tile max-w-full overflow-hidden"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
                 <div className="flex items-start gap-3">
