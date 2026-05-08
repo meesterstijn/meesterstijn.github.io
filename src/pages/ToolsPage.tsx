@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Clock, X } from "lucide-react";
+import { Clock, X, Globe } from "lucide-react";
+
+const KaartTool = lazy(() => import("@/components/KaartTool"));
 
 // ─── Canon data ───────────────────────────────────────────────────────────────
 
@@ -306,6 +308,19 @@ const ToolsPage = () => {
                 <p className="mt-1 text-sm text-muted-foreground">De Nederlandse Canon chronologisch in beeld.</p>
               </div>
             </button>
+
+            <button
+              onClick={() => setOpen("kaart")}
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft text-left transition-smooth hover:-translate-y-1 hover:shadow-tile hover:border-accent"
+            >
+              <div className="rounded-2xl bg-secondary p-3">
+                <Globe className="h-6 w-6 text-primary" strokeWidth={1.6} />
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold">Kaart van de wereld</p>
+                <p className="mt-1 text-sm text-muted-foreground">Interactieve wereldkaart, in- en uitzoombaar.</p>
+              </div>
+            </button>
           </div>
 
           <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
@@ -315,6 +330,11 @@ const ToolsPage = () => {
       </div>
 
       {open === "tijdlijn" && <Tijdlijn onClose={() => setOpen(null)} />}
+      {open === "kaart" && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-paper text-muted-foreground">Kaart laden…</div>}>
+          <KaartTool onClose={() => setOpen(null)} />
+        </Suspense>
+      )}
     </>
   );
 };
