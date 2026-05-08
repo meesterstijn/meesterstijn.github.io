@@ -12,6 +12,7 @@ import Quotes from "./pages/Quotes.tsx";
 import Klastools from "./pages/Klastools.tsx";
 import Focus from "./pages/Focus.tsx";
 import Whiteboard from "./pages/Whiteboard.tsx";
+import Klassenafspraken from "./pages/Klassenafspraken.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/klastools" element={<Klastools />} />
           <Route path="/focus" element={<Focus />} />
           <Route path="/whiteboard" element={<Whiteboard />} />
+          <Route path="/klassenafspraken" element={<Klassenafspraken />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FullscreenButton side="left" />
