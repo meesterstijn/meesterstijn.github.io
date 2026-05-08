@@ -286,7 +286,7 @@ const Klastools = () => {
         <>
         <div
           className="fixed z-[60] flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-tile"
-          style={{ left: fotoPos.x, top: fotoPos.y, width: 480 }}
+          style={{ left: fotoPos.x, top: fotoPos.y, width: 640 }}
         >
             {/* Header — versleepbaar */}
             <div
@@ -319,7 +319,7 @@ const Klastools = () => {
             <div
               ref={fotoAreaRef}
               className="relative overflow-hidden bg-muted/20"
-              style={{ height: 300, cursor: wijzerAan ? "crosshair" : "default" }}
+              style={{ height: 420, cursor: wijzerAan ? "crosshair" : "default" }}
               onMouseDown={wijzerAan ? e => beginWijzerDrag(e.clientX, e.clientY) : undefined}
               onTouchStart={wijzerAan ? e => beginWijzerDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
             >
