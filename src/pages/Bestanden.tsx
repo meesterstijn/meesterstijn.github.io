@@ -74,8 +74,8 @@ const Bestanden = () => {
       <main className="container py-10 md:py-14">
 
         {/* Header */}
-        <div className="mb-8 animate-fade-up flex items-start justify-between">
-          <div className="max-w-2xl">
+        <div className="mb-8 animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Bibliotheek</p>
             <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Bestanden</h1>
             <p className="mt-3 text-muted-foreground">Werkbladen, leesteksten en bronnen, geordend per vak.</p>
@@ -83,12 +83,12 @@ const Bestanden = () => {
           {!unlocked ? (
             <button
               onClick={() => setShowPw(true)}
-              className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
+              className="self-start flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
             >
               <Lock className="h-4 w-4" /> Ontgrendelen
             </button>
           ) : (
-            <span className="mt-4 flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
+            <span className="self-start flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
               <Download className="h-4 w-4" /> Toegang verleend
             </span>
           )}
@@ -152,7 +152,7 @@ const Bestanden = () => {
               </button>
             ))}
           </div>
-          <div className="relative md:w-72">
+          <div className="relative w-full md:w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
@@ -164,7 +164,7 @@ const Bestanden = () => {
         </div>
 
         {/* Bestanden */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((f, i) => {
             const Icon = iconFor(f.type);
             return (

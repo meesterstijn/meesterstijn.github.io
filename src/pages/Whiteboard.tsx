@@ -345,12 +345,12 @@ const Whiteboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-paper bg-warm flex flex-col">
+    <div className="h-screen overflow-hidden bg-paper bg-warm flex flex-col">
       <SiteHeader />
 
-      <main className="container py-6 flex flex-col flex-1">
+      <main className="container py-6 flex flex-col flex-1 overflow-hidden">
         {/* Toolbar */}
-        <div className="animate-fade-up mb-3 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft" style={{ animationDelay: "60ms" }}>
+        <div className="animate-fade-up mb-3 flex items-center gap-3 overflow-x-auto rounded-2xl border border-border bg-card p-3 shadow-soft shrink-0" style={{ animationDelay: "60ms" }}>
           {/* Colors */}
           <div className="flex gap-1.5">
             {COLORS.map((c) => (
@@ -437,7 +437,7 @@ const Whiteboard = () => {
 
         {/* Canvas wrapper — position:relative so overlays can be positioned inside */}
         <div
-          className="animate-fade-up flex-1 rounded-3xl border border-border shadow-soft"
+          className="animate-fade-up flex-1 rounded-3xl border border-border shadow-soft min-h-0"
           style={{ position: "relative", overflow: "hidden", animationDelay: "120ms" }}
         >
           <canvas
