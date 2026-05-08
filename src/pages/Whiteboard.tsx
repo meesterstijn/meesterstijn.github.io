@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload, Wrench } from "lucide-react";
 
-const COLORS = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#7C3AED", "#000000", "#ffffff"];
+const COLORS = ["#4682B4", "#10B981", "#F59E0B", "#EF4444", "#7C3AED", "#000000", "#ffffff"];
 const SIZES = [3, 6, 12, 20];
 const ERASER_RADIUS = 28;
 const LINE_SPACING = 52;
@@ -39,7 +39,7 @@ const strokeHit = (stroke: Stroke, pos: Point, radius: number) => {
 
 const drawBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, lined: boolean) => {
   if (lined) {
-    ctx.fillStyle = "#fffef0";
+    ctx.fillStyle = "#f9f9f9";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "#aac5d8";
     ctx.lineWidth = 1.5;
@@ -462,7 +462,7 @@ const VerhoudingContent = () => {
 const Whiteboard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>("pen");
-  const [color, setColor] = useState("#2563EB");
+  const [color, setColor] = useState("#4682B4");
   const [size, setSize] = useState(6);
   const [lined, setLinedState] = useState(false);
   const [showStoplicht, setShowStoplicht] = useState(false);
