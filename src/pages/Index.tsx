@@ -25,7 +25,7 @@ const tiles: Tile[] = [
   { title: "Tools",      desc: "Tijdlijn & handige hulpmiddelen",  icon: Wrench,       href: "/tools",     tone: "cream" },
   { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "coral" },
   { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
-  { title: "Spellen",    desc: "Pauzespellen",              icon: Puzzle,       href: "#spellen",   tone: "cream" },
+  { title: "Spellen",    desc: "Pauzespellen & challenges",  icon: Puzzle,       href: "/spellen",   tone: "cream" },
   { title: "Schaken",          desc: "Een potje schaak",          icon: Crown,        href: "https://www.chess.com/home", external: true, tone: "ink" },
   { title: "Klassenafspraken", desc: "Onze regels en afspraken",  icon: ListChecks,   href: "/klassenafspraken",          tone: "sage" },
   { title: "Beloningen",       desc: "Punten & beloningssysteem", icon: Trophy,        href: "/beloningen",                tone: "cream" },

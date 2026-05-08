@@ -15,6 +15,7 @@ import Whiteboard from "./pages/Whiteboard.tsx";
 import Klassenafspraken from "./pages/Klassenafspraken.tsx";
 import Beloningen from "./pages/Beloningen.tsx";
 import ToolsPage from "./pages/ToolsPage.tsx";
+import Spellen from "./pages/Spellen.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/klassenafspraken" element={<Klassenafspraken />} />
           <Route path="/beloningen" element={<Beloningen />} />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/spellen" element={<Spellen />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FullscreenButton side="left" />
