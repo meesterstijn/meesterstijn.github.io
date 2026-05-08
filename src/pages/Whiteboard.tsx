@@ -224,6 +224,11 @@ const TimerContent = () => {
 
 // ─── TekstContent ─────────────────────────────────────────────────────────────
 
+const tekstPresets = [
+  { label: "Goedemorgen", text: "Wat fijn dat jij er bent.\nOm half 9 gaan we beginnen met stillezen." },
+  { label: "Klaar?",      text: "Ben je klaar? Dan: " },
+];
+
 const TekstContent = () => {
   const [text, setText] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -237,6 +242,17 @@ const TekstContent = () => {
 
   return (
     <div className="flex flex-col gap-3 p-4" style={{ width: 280 }}>
+      <div className="flex flex-wrap gap-2">
+        {tekstPresets.map(p => (
+          <button
+            key={p.label}
+            onClick={() => setText(p.text)}
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent hover:text-accent"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
       <textarea
         ref={ref}
         value={text}
@@ -246,6 +262,188 @@ const TekstContent = () => {
         className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-accent overflow-hidden"
         style={{ fontSize: 16, lineHeight: 1.3, minHeight: 80, maxHeight: 320, overflowY: "auto" }}
       />
+    </div>
+  );
+};
+
+// ─── Rekenmachine ─────────────────────────────────────────────────────────────
+
+const CalcContent = () => {
+  const [display, setDisplay] = useState("0");
+  const [stored, setStored] = useState<number | null>(null);
+  const [op, setOp] = useState<string | null>(null);
+  const [fresh, setFresh] = useState(true);
+
+  const compute = (a: number, b: number, o: string) => {
+    if (o === "+") return a + b;
+    if (o === "−") return a - b;
+    if (o === "×") return a * b;
+    if (o === "÷") return b !== 0 ? a / b : NaN;
+    return b;
+  };
+  const fmt = (n: number) => {
+    const s = String(parseFloat(n.toPrecision(10)));
+    return s;
+  };
+  const handle = (b: string) => {
+    if (b === "C") { setDisplay("0"); setStored(null); setOp(null); setFresh(true); return; }
+    if (b === "±") { setDisplay(d => d.startsWith("-") ? d.slice(1) : "-" + d); return; }
+    if (b === "%") { setDisplay(d => String(parseFloat(d) / 100)); return; }
+    if ("0123456789".includes(b)) {
+      setDisplay(d => fresh ? b : d === "0" ? b : d + b);
+      setFresh(false); return;
+    }
+    if (b === ".") {
+      setDisplay(d => fresh ? "0." : d.includes(".") ? d : d + ".");
+      setFresh(false); return;
+    }
+    if (["+", "−", "×", "÷"].includes(b)) {
+      const cur = parseFloat(display);
+      if (stored !== null && op && !fresh) {
+        const res = compute(stored, cur, op);
+        setDisplay(fmt(res)); setStored(res);
+      } else { setStored(cur); }
+      setOp(b); setFresh(true); return;
+    }
+    if (b === "=") {
+      if (stored === null || !op) return;
+      const res = compute(stored, parseFloat(display), op);
+      setDisplay(fmt(res)); setStored(null); setOp(null); setFresh(true);
+    }
+  };
+  const rows = [["C","±","%","÷"],["7","8","9","×"],["4","5","6","−"],["1","2","3","+"],[null,"0",".","="]];
+  return (
+    <div className="p-4" style={{ width: 240 }}>
+      <div className="mb-3 rounded-xl bg-muted/30 px-4 py-2 text-right">
+        {stored !== null && op && <div className="text-xs text-muted-foreground">{stored} {op}</div>}
+        <div className="font-display text-2xl font-bold tabular-nums truncate">{display}</div>
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {rows.flat().map((b, i) => (
+          <button key={i} onClick={() => b && handle(b)}
+            className={`rounded-xl py-3 text-sm font-semibold transition-smooth ${!b ? "" : b === "=" ? "bg-primary text-primary-foreground hover:opacity-90 col-span-1" : b === "C" ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : ["+","−","×","÷","%","±"].includes(b) ? "bg-accent/10 text-accent hover:bg-accent/20" : "border border-border hover:border-accent"}`}
+            style={{ gridColumn: b === null ? "span 1" : undefined }}
+          >{b ?? ""}</button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Metriek stelsel ──────────────────────────────────────────────────────────
+
+const MetriekTrap = ({ title, units, factor }: { title: string; units: string[]; factor: number }) => (
+  <div className="p-4" style={{ width: 420 }}>
+    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</p>
+    <div className="flex items-end gap-1">
+      {units.map((u, i) => (
+        <div key={u} className="flex flex-1 flex-col items-center">
+          <div
+            className="flex w-full items-center justify-center rounded-t-lg text-xs font-bold text-primary-foreground"
+            style={{ height: (units.length - i) * 26, backgroundColor: `hsl(177 12% ${22 + i * 6}%)` }}
+          >
+            {u}
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="mt-2 flex justify-between px-1 text-[11px] font-medium text-muted-foreground">
+      <span>÷ {factor} ←</span>
+      <span>→ × {factor}</span>
+    </div>
+  </div>
+);
+
+// ─── Geld ─────────────────────────────────────────────────────────────────────
+
+const BILJETTEN = [
+  { v: 500, label: "€500", bg: "#8B5CF6" },
+  { v: 200, label: "€200", bg: "#F59E0B" },
+  { v: 100, label: "€100", bg: "#10B981" },
+  { v: 50,  label: "€50",  bg: "#F97316" },
+  { v: 20,  label: "€20",  bg: "#3B82F6" },
+  { v: 10,  label: "€10",  bg: "#EF4444" },
+  { v: 5,   label: "€5",   bg: "#6B7280" },
+];
+const MUNTEN = [
+  { v: 2,    label: "€2"   },
+  { v: 1,    label: "€1"   },
+  { v: 0.5,  label: "50ct" },
+  { v: 0.2,  label: "20ct" },
+  { v: 0.1,  label: "10ct" },
+  { v: 0.05, label: "5ct"  },
+  { v: 0.02, label: "2ct"  },
+  { v: 0.01, label: "1ct"  },
+];
+
+const GeldContent = () => {
+  const [counts, setCounts] = useState<Record<number, number>>({});
+  const adj = (v: number, d: number) => setCounts(p => ({ ...p, [v]: Math.max(0, (p[v] || 0) + d) }));
+  const total = [...BILJETTEN, ...MUNTEN].reduce((s, x) => s + (counts[x.v] || 0) * x.v, 0);
+  const Row = ({ v, label, bg }: { v: number; label: string; bg?: string }) => (
+    <div className="flex items-center gap-2 py-0.5">
+      <div className={`flex h-7 w-14 shrink-0 items-center justify-center rounded text-xs font-bold text-white`}
+        style={{ backgroundColor: bg ?? "#C69B34" }}>{label}</div>
+      <span className="w-5 text-center text-sm tabular-nums">{counts[v] || 0}</span>
+      <button onClick={() => adj(v, -1)} className="h-6 w-6 rounded border border-border text-xs leading-none hover:border-accent">−</button>
+      <button onClick={() => adj(v, 1)}  className="h-6 w-6 rounded border border-border text-xs leading-none hover:border-accent">+</button>
+    </div>
+  );
+  return (
+    <div className="p-4" style={{ width: 340 }}>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Biljetten</p>
+      {BILJETTEN.map(b => <Row key={b.v} {...b} />)}
+      <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Munten</p>
+      <div className="grid grid-cols-2 gap-x-3">
+        {MUNTEN.map(m => <Row key={m.v} v={m.v} label={m.label} />)}
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/10 px-4 py-2">
+        <span className="text-sm font-semibold">Totaal</span>
+        <span className="font-display text-xl font-bold">€ {total.toFixed(2)}</span>
+      </div>
+      <button onClick={() => setCounts({})} className="mt-1.5 w-full text-center text-xs text-muted-foreground hover:text-accent transition-smooth">Wis alles</button>
+    </div>
+  );
+};
+
+// ─── Verhoudingtabel ──────────────────────────────────────────────────────────
+
+const VerhoudingContent = () => {
+  const [rows, setRows] = useState([
+    ["1","2","3","4","5",""],
+    [ "","","","","",""],
+  ]);
+  const update = (r: number, c: number, val: string) =>
+    setRows(prev => prev.map((row, ri) => ri === r ? row.map((cell, ci) => ci === c ? val : cell) : row));
+  const addCol = () => setRows(prev => prev.map(r => [...r, ""]));
+  const removeCol = () => setRows(prev => prev[0].length > 2 ? prev.map(r => r.slice(0, -1)) : prev);
+  const clear = () => setRows([Array(rows[0].length).fill(""), Array(rows[0].length).fill("")]);
+  return (
+    <div className="p-4" style={{ minWidth: 320 }}>
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="border-collapse">
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className={ri === 0 ? "bg-primary/5" : ""}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="border border-border p-0">
+                    <input
+                      value={cell}
+                      onChange={e => update(ri, ci, e.target.value)}
+                      className="w-14 px-2 py-2 text-center text-sm font-medium outline-none focus:bg-accent/5"
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button onClick={removeCol} className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium hover:border-accent transition-smooth">− Kolom</button>
+        <button onClick={addCol}    className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium hover:border-accent transition-smooth">+ Kolom</button>
+        <button onClick={clear}     className="ml-auto rounded-xl border border-border px-3 py-1.5 text-xs text-muted-foreground hover:border-accent transition-smooth">Wissen</button>
+      </div>
     </div>
   );
 };
@@ -263,6 +461,12 @@ const Whiteboard = () => {
   const [showTekst, setShowTekst] = useState(false);
   const [showFoto, setShowFoto] = useState(false);
   const [fotoUrl, setFotoUrl] = useState<string>("/edi1.webp");
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
+  const [showOppervlakte, setShowOppervlakte] = useState(false);
+  const [showInhoud, setShowInhoud] = useState(false);
+  const [showGeld, setShowGeld] = useState(false);
+  const [showVerhouding, setShowVerhouding] = useState(false);
   const [wijzerAan, setWijzerAan] = useState(false);
   const [wijzerPos, setWijzerPos] = useState({ x: 50, y: 50 });
   const fotoFileRef = useRef<HTMLInputElement>(null);
@@ -447,6 +651,32 @@ const Whiteboard = () => {
             </DraggableWidget>
           )}
 
+          {showCalc && (
+            <DraggableWidget title="Rekenmachine" initialPos={{ x: 20, y: 80 }} onClose={() => setShowCalc(false)}>
+              <CalcContent />
+            </DraggableWidget>
+          )}
+          {showOppervlakte && (
+            <DraggableWidget title="Metriek — oppervlakte" initialPos={{ x: 20, y: 80 }} onClose={() => setShowOppervlakte(false)}>
+              <MetriekTrap title="Oppervlakte" units={["km²","hm²","dam²","m²","dm²","cm²","mm²"]} factor={100} />
+            </DraggableWidget>
+          )}
+          {showInhoud && (
+            <DraggableWidget title="Metriek — inhoud" initialPos={{ x: 20, y: 80 }} onClose={() => setShowInhoud(false)}>
+              <MetriekTrap title="Inhoud" units={["km³","hm³","dam³","m³","dm³","cm³","mm³"]} factor={1000} />
+            </DraggableWidget>
+          )}
+          {showGeld && (
+            <DraggableWidget title="Geld" initialPos={{ x: 20, y: 80 }} onClose={() => setShowGeld(false)}>
+              <GeldContent />
+            </DraggableWidget>
+          )}
+          {showVerhouding && (
+            <DraggableWidget title="Verhoudingtabel" initialPos={{ x: 20, y: 80 }} onClose={() => setShowVerhouding(false)}>
+              <VerhoudingContent />
+            </DraggableWidget>
+          )}
+
           {showFoto && (
             <DraggableWidget title="Foto" initialPos={{ x: 60, y: 60 }} onClose={() => { setShowFoto(false); setWijzerAan(false); }}>
               <div style={{ width: 600 }}>
@@ -600,8 +830,37 @@ const Whiteboard = () => {
           Foto
         </button>
 
+        {/* Tools toggle */}
+        <button
+          onClick={() => setShowToolsMenu(v => !v)}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showToolsMenu ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+        >
+          🧰 Tools
+        </button>
+
       </div>
       </div>
+
+      {/* Tools popup menu */}
+      {showToolsMenu && (
+        <div className="fixed bottom-[72px] right-4 z-40 flex flex-col gap-1 rounded-2xl border border-border bg-card p-2 shadow-tile">
+          {[
+            { label: "Rekenmachine", key: "calc", setter: setShowCalc, active: showCalc },
+            { label: "Metriek oppervlakte", key: "opp", setter: setShowOppervlakte, active: showOppervlakte },
+            { label: "Metriek inhoud", key: "inh", setter: setShowInhoud, active: showInhoud },
+            { label: "Geld (euro)", key: "geld", setter: setShowGeld, active: showGeld },
+            { label: "Verhoudingtabel", key: "verh", setter: setShowVerhouding, active: showVerhouding },
+          ].map(({ label, key, setter, active }) => (
+            <button
+              key={key}
+              onClick={() => { setter(v => !v); setShowToolsMenu(false); }}
+              className={`rounded-xl px-4 py-2 text-left text-sm font-medium transition-smooth hover:bg-accent/10 ${active ? "text-accent" : ""}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
     </div>
   );
