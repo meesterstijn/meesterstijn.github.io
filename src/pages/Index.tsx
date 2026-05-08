@@ -51,12 +51,12 @@ const Index = () => {
 
       <main className="container py-10 md:py-14">
         {/* Hero grid */}
-        <div className="grid gap-6 lg:grid-cols-5">
-          <div className="animate-fade-up lg:col-span-3 h-full">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="animate-fade-up sm:col-span-1 lg:col-span-3 h-full">
             <ClockCard />
           </div>
 
-          <div className="animate-fade-up h-full lg:col-span-2" style={{ animationDelay: "80ms" }}>
+          <div className="animate-fade-up h-full sm:col-span-1 lg:col-span-2" style={{ animationDelay: "80ms" }}>
             <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Snelle links
