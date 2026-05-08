@@ -31,7 +31,7 @@ export const ClockCard = () => {
         className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full opacity-20 blur-3xl"
         style={{ background: "hsl(var(--highlight))" }}
       />
-      <div className="relative flex items-center justify-between gap-6">
+      <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground/60">
             Vandaag is het
@@ -41,11 +41,11 @@ export const ClockCard = () => {
           </p>
           <p className="text-primary-foreground/70">{dateStr}</p>
         </div>
-        <div className="flex items-end gap-2 font-display text-7xl font-semibold tabular-nums leading-none md:text-[8rem]">
+        <div className="flex items-end gap-2 font-display text-6xl font-semibold tabular-nums leading-none md:text-[8rem]">
           <span>{hh}</span>
           <span className="text-accent">:</span>
           <span>{mm}</span>
-          <span className="ml-2 text-3xl text-primary-foreground/50 md:text-4xl">{ss}</span>
+          <span className="ml-2 text-2xl text-primary-foreground/50 md:text-4xl">{ss}</span>
         </div>
       </div>
     </div>
