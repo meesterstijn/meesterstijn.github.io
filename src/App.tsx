@@ -21,6 +21,7 @@ const ToolsPage       = lazy(() => import("./pages/ToolsPage.tsx"));
 const Spellen         = lazy(() => import("./pages/Spellen.tsx"));
 const Taakjes         = lazy(() => import("./pages/Taakjes.tsx"));
 const Dagritme        = lazy(() => import("./pages/Dagritme.tsx"));
+const Prive           = lazy(() => import("./pages/Prive.tsx"));
 const NotFound        = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
@@ -87,6 +88,7 @@ const App = () => (
           <Route path="/spellen" element={<Spellen />} />
           <Route path="/taakjes" element={<Taakjes />} />
           <Route path="/dagritme" element={<Dagritme />} />
+          <Route path="/prive" element={<Prive />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>

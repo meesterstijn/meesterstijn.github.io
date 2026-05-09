@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { GraduationCap, Cloud } from "lucide-react";
+import { GraduationCap, Cloud, Lock } from "lucide-react";
 
 const links = [
   { to: "/", label: "Start" },
   { to: "/planning", label: "Planning" },
   { to: "/dagritme", label: "Dagritme" },
   { to: "/weer", label: "Weer", icon: Cloud },
+  { to: "/prive", label: "Privé", icon: Lock },
 ];
 
 export const SiteHeader = () => {
