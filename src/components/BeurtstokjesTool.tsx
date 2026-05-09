@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Users } from "lucide-react";
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
+import { supabase } from "@/lib/supabase";
 
 const fetchLeerlingen = async (): Promise<string[]> => {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/taakjes?id=eq.1`, { headers: H });
-    const data = await res.json();
-    return data?.[0]?.leerlingen ?? [];
+    const { data } = await supabase.from("taakjes").select("leerlingen").eq("id", 1).single();
+    return data?.leerlingen ?? [];
   } catch { return []; }
 };
 
 const saveLeerlingen = (namen: string[]) =>
-  fetch(`${SUPABASE_URL}/rest/v1/taakjes?id=eq.1`, { method: "PATCH", headers: H, body: JSON.stringify({ leerlingen: namen }) });
+  supabase.from("taakjes").update({ leerlingen: namen }).eq("id", 1);
 
 const BeurtstokjesTool = ({ onClose }: { onClose: () => void }) => {
   const [leerlingen, setLeerlingen] = useState<string[]>([]);

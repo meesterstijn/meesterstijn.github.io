@@ -2,29 +2,26 @@ import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Plus, Trash2, Shuffle, Settings, ChevronLeft, RotateCw } from "lucide-react";
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
+import { supabase } from "@/lib/supabase";
 
 type Assignments = Record<string, string[]>;
 
 const fetchData = async (): Promise<{ leerlingen: string[]; assignments: Assignments }> => {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/taakjes?id=eq.1`, { headers: H });
-    const data = await res.json();
-    const raw = data?.[0]?.assignments ?? {};
+    const { data } = await supabase.from("taakjes").select("leerlingen,assignments").eq("id", 1).single();
+    const raw = data?.assignments ?? {};
     const assignments: Assignments = {};
     for (const [key, val] of Object.entries(raw)) {
       assignments[key] = Array.isArray(val) ? (val as string[]) : typeof val === "string" ? [val] : [];
     }
-    return { leerlingen: data?.[0]?.leerlingen ?? [], assignments };
+    return { leerlingen: data?.leerlingen ?? [], assignments };
   } catch {
     return { leerlingen: [], assignments: {} };
   }
 };
 
 const patch = async (body: object) =>
-  fetch(`${SUPABASE_URL}/rest/v1/taakjes?id=eq.1`, { method: "PATCH", headers: H, body: JSON.stringify(body) });
+  supabase.from("taakjes").update(body).eq("id", 1);
 
 type Taak = { id: string; emoji: string; naam: string; desc: string };
 

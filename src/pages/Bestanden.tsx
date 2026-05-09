@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { FileText, FileSpreadsheet, FileImage, FileType, Download, Search, Lock } from "lucide-react";
+import { FileText, FileSpreadsheet, FileImage, FileType, Download, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-const PASSWORD = "nietvoorleerlingen";
 
 type FileItem = {
   name: string;
@@ -48,25 +46,11 @@ const tintFor = (t: FileItem["type"]) =>
 const Bestanden = () => {
   const [cat, setCat] = useState<(typeof categories)[number]>("Alle");
   const [q, setQ] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
-  const [showPw, setShowPw] = useState(false);
-  const [pwInput, setPwInput] = useState("");
-  const [pwError, setPwError] = useState(false);
+  const unlocked = true;
 
   const filtered = files.filter(
     (f) => (cat === "Alle" || f.category === cat) && f.name.toLowerCase().includes(q.toLowerCase())
   );
-
-  const handleUnlock = () => {
-    if (pwInput === PASSWORD) {
-      setUnlocked(true);
-      setShowPw(false);
-      setPwInput("");
-      setPwError(false);
-    } else {
-      setPwError(true);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-paper bg-warm">
@@ -80,60 +64,11 @@ const Bestanden = () => {
             <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Bestanden</h1>
             <p className="mt-3 text-muted-foreground">Werkbladen, leesteksten en bronnen, geordend per vak.</p>
           </div>
-          {!unlocked ? (
-            <button
-              onClick={() => setShowPw(true)}
-              className="self-start flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
-            >
-              <Lock className="h-4 w-4" /> Ontgrendelen
-            </button>
-          ) : (
-            <span className="self-start flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
-              <Download className="h-4 w-4" /> Toegang verleend
-            </span>
-          )}
+          <span className="self-start flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent">
+            <Download className="h-4 w-4" /> Toegang verleend
+          </span>
         </div>
 
-        {/* Wachtwoordscherm */}
-        {showPw && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-tile">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-                  <Lock className="h-5 w-5" />
-                </span>
-                <p className="font-display text-xl font-semibold">Bestanden ontgrendelen</p>
-              </div>
-              <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om alle bestanden te openen.</p>
-              <input
-                type="password"
-                value={pwInput}
-                onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
-                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="Wachtwoord"
-                autoFocus
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-              {pwError && <p className="mt-2 text-xs text-destructive">Wachtwoord onjuist.</p>}
-              <div className="mt-4 flex gap-2">
-                <button onClick={handleUnlock} className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90">
-                  Ontgrendelen
-                </button>
-                <button onClick={() => setShowPw(false)} className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent">
-                  Annuleren
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Vergrendeld scherm */}
-        {!unlocked && (
-          <div className="mb-8 flex items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-5 text-muted-foreground">
-            <Lock className="h-5 w-5 shrink-0" />
-            <p className="text-sm">Klik op "Ontgrendelen" rechtsboven om toegang te krijgen tot alle bestanden.</p>
-          </div>
-        )}
 
         {/* Filters + zoeken */}
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

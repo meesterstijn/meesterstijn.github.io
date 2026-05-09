@@ -1,29 +1,25 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Lock } from "lucide-react";
-
-const PASSWORD = "nietvoorleerlingen";
-const SESSION_KEY = "site_auth";
+import { useAuth } from "@/context/AuthContext";
 
 const AuthGate = ({ children }: { children: ReactNode }) => {
-  const [unlocked, setUnlocked] = useState(false);
-  const [pwInput, setPwInput] = useState("");
-  const [pwError, setPwError] = useState(false);
+  const { user, loading, signIn } = useAuth();
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState("");
+  const [busy, setBusy]           = useState(false);
 
-  useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === "1") setUnlocked(true);
-  }, []);
+  if (loading) return null;
+  if (user) return <>{children}</>;
 
-  const handleUnlock = () => {
-    if (pwInput === PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, "1");
-      setUnlocked(true);
-      setPwError(false);
-    } else {
-      setPwError(true);
-    }
+  const handleLogin = async () => {
+    if (!email || !password) return;
+    setBusy(true);
+    setError("");
+    const err = await signIn(email, password);
+    setBusy(false);
+    if (err) setError("E-mail of wachtwoord onjuist.");
   };
-
-  if (unlocked) return <>{children}</>;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-paper">
@@ -34,22 +30,36 @@ const AuthGate = ({ children }: { children: ReactNode }) => {
           </span>
           <p className="font-display text-xl font-semibold">Meester Stijn</p>
         </div>
-        <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om toegang te krijgen.</p>
-        <input
-          type="password"
-          value={pwInput}
-          onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
-          onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-          placeholder="Wachtwoord"
-          autoFocus
-          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-        />
-        {pwError && <p className="mt-2 text-xs text-destructive">Wachtwoord onjuist.</p>}
+        <p className="mb-4 text-sm text-muted-foreground">Log in om toegang te krijgen.</p>
+
+        <div className="flex flex-col gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError(""); }}
+            onKeyDown={e => e.key === "Enter" && handleLogin()}
+            placeholder="E-mailadres"
+            autoFocus
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(""); }}
+            onKeyDown={e => e.key === "Enter" && handleLogin()}
+            placeholder="Wachtwoord"
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
+          />
+        </div>
+
+        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+
         <button
-          onClick={handleUnlock}
-          className="mt-4 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
+          onClick={handleLogin}
+          disabled={busy}
+          className="mt-4 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90 disabled:opacity-50"
         >
-          Toegang
+          {busy ? "Inloggen…" : "Inloggen"}
         </button>
       </div>
     </div>

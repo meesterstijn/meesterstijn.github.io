@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Clock, Lock, Pencil, Plus, Trash2, Check, X, LayoutGrid, CalendarDays } from "lucide-react";
+import { Clock, Pencil, Plus, Trash2, Check, X, LayoutGrid, CalendarDays } from "lucide-react";
 
-const PASSWORD = "nietvoorleerlingen";
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
+import { supabase } from "@/lib/supabase";
 const ROW_ID = 1;
 
 type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
@@ -86,35 +84,20 @@ const toneLabels: Record<Tone, string> = {
 
 async function loadFromSupabase(): Promise<Day[] | null> {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/dagritme?id=eq.${ROW_ID}&select=data`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    });
-    const rows = await res.json();
-    if (rows?.[0]?.data) return normalize(JSON.parse(rows[0].data));
+    const { data } = await supabase.from("dagritme").select("data").eq("id", ROW_ID).single();
+    if (data?.data) return normalize(JSON.parse(data.data));
   } catch {}
   return null;
 }
 
 async function saveToSupabase(week: Day[]) {
-  await fetch(`${SUPABASE_URL}/rest/v1/dagritme`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates",
-    },
-    body: JSON.stringify({ id: ROW_ID, data: JSON.stringify(week) }),
-  });
+  await supabase.from("dagritme").upsert({ id: ROW_ID, data: JSON.stringify(week) });
 }
 
 const Dagritme = () => {
   const [week, setWeek]         = useState<Day[]>(defaultWeek);
   const [loading, setLoading]   = useState(true);
   const [unlocked, setUnlocked] = useState(false);
-  const [showPw, setShowPw]     = useState(false);
-  const [pwInput, setPwInput]   = useState("");
-  const [pwError, setPwError]   = useState(false);
   const [editing, setEditing]   = useState<{ dayIdx: number; blockId: string } | null>(null);
   const [editVal, setEditVal]   = useState<Block | null>(null);
   const [saving, setSaving]     = useState(false);
@@ -140,13 +123,6 @@ const Dagritme = () => {
     setSaving(false);
   };
 
-  const handleUnlock = () => {
-    if (pwInput === PASSWORD) {
-      setUnlocked(true); setShowPw(false); setPwInput(""); setPwError(false);
-    } else {
-      setPwError(true);
-    }
-  };
 
   const startEdit = (dIdx: number, block: Block) => {
     setEditing({ dayIdx: dIdx, blockId: block.id });
@@ -241,72 +217,39 @@ const Dagritme = () => {
             </button>
             {!unlocked ? (
               <button
-                onClick={() => setShowPw(true)}
+                onClick={() => setUnlocked(true)}
                 className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
               >
-                <Lock className="h-4 w-4" /> Bewerken
+                <Pencil className="h-4 w-4" /> Bewerken
               </button>
             ) : (
               <>
-              {undoWeek && (
+                {undoWeek && (
+                  <button
+                    onClick={herstelWeek}
+                    className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent hover:text-accent"
+                  >
+                    ↩ Ongedaan maken
+                  </button>
+                )}
                 <button
-                  onClick={herstelWeek}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent hover:text-accent"
+                  onClick={wisWeek}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-destructive hover:text-destructive"
                 >
-                  ↩ Ongedaan maken
+                  <Trash2 className="h-4 w-4" /> Week wissen
                 </button>
-              )}
-              <button
-                onClick={wisWeek}
-                className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" /> Week wissen
-              </button>
-              <button
-                onClick={() => setUnlocked(false)}
-                className="flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent transition-smooth hover:bg-accent/20"
-              >
-                <Pencil className="h-4 w-4" /> Bewerkmode aan
-              </button>
+                <button
+                  onClick={() => setUnlocked(false)}
+                  className="flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-2.5 text-sm font-medium text-accent transition-smooth hover:bg-accent/20"
+                >
+                  <Pencil className="h-4 w-4" /> Bewerkmode aan
+                </button>
               </>
             )}
           </div>
         </div>
 
         {loading && <p className="text-sm text-muted-foreground mb-6">Rooster laden…</p>}
-
-        {/* Wachtwoordscherm */}
-        {showPw && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-tile">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-                  <Lock className="h-5 w-5" />
-                </span>
-                <p className="font-display text-xl font-semibold">Dagritme bewerken</p>
-              </div>
-              <p className="mb-4 text-sm text-muted-foreground">Voer het wachtwoord in om te bewerken.</p>
-              <input
-                type="password"
-                value={pwInput}
-                onChange={e => { setPwInput(e.target.value); setPwError(false); }}
-                onKeyDown={e => e.key === "Enter" && handleUnlock()}
-                placeholder="Wachtwoord"
-                autoFocus
-                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-              {pwError && <p className="mt-2 text-xs text-destructive">Wachtwoord onjuist.</p>}
-              <div className="mt-4 flex gap-2">
-                <button onClick={handleUnlock} className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90">
-                  Ontgrendelen
-                </button>
-                <button onClick={() => setShowPw(false)} className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent">
-                  Annuleren
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Bewerkscherm */}
         {editing && editVal && (

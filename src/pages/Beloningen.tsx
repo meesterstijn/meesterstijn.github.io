@@ -5,14 +5,7 @@ import { Plus, Minus, Trash2, Trophy, Star, Lock, ArrowUpRight, X } from "lucide
 
 const VerjaardagTool = lazy(() => import("@/components/VerjaardagTool"));
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-
-const headers = {
-  apikey: SUPABASE_KEY,
-  Authorization: `Bearer ${SUPABASE_KEY}`,
-  "Content-Type": "application/json",
-};
+import { supabase } from "@/lib/supabase";
 
 type Reward = { id: number; label: string; goal: number; claimed: boolean };
 
@@ -47,45 +40,29 @@ const MOPPEN = [
 ];
 
 const fetchPoints = async (): Promise<number> => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/class_points?id=eq.1&select=value`, { headers });
-  const data = await res.json();
-  return data?.[0]?.value ?? 0;
+  const { data } = await supabase.from("class_points").select("value").eq("id", 1).single();
+  return data?.value ?? 0;
 };
 
 const updatePoints = async (value: number) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/class_points?id=eq.1`, {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify({ value }),
-  });
+  await supabase.from("class_points").update({ value }).eq("id", 1);
 };
 
 const fetchRewards = async (): Promise<Reward[]> => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rewards?order=goal.asc`, { headers });
-  return res.json();
+  const { data } = await supabase.from("rewards").select("*").order("goal", { ascending: true });
+  return data ?? [];
 };
 
 const addReward = async (label: string, goal: number) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/rewards`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ label, goal, claimed: false }),
-  });
+  await supabase.from("rewards").insert({ label, goal, claimed: false });
 };
 
 const toggleClaimed = async (id: number, claimed: boolean) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/rewards?id=eq.${id}`, {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify({ claimed }),
-  });
+  await supabase.from("rewards").update({ claimed }).eq("id", id);
 };
 
 const deleteReward = async (id: number) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/rewards?id=eq.${id}`, {
-    method: "DELETE",
-    headers,
-  });
+  await supabase.from("rewards").delete().eq("id", id);
 };
 
 const Beloningen = () => {

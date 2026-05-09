@@ -1,21 +1,19 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Trash2, Shuffle, ChevronRight, BookOpen } from "lucide-react";
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
+import { supabase } from "@/lib/supabase";
 
 type Word = { id: number; word: string };
 
 const fetchWords = async (): Promise<Word[]> => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/spelling_words?order=word.asc`, { headers: H });
-  return res.json();
+  const { data } = await supabase.from("spelling_words").select("*").order("word", { ascending: true });
+  return data ?? [];
 };
 const addWord = async (word: string) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/spelling_words`, { method: "POST", headers: H, body: JSON.stringify({ word }) });
+  await supabase.from("spelling_words").insert({ word });
 };
 const deleteWord = async (id: number) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/spelling_words?id=eq.${id}`, { method: "DELETE", headers: H });
+  await supabase.from("spelling_words").delete().eq("id", id);
 };
 
 const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);

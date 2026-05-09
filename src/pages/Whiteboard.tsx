@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -622,10 +623,6 @@ const VerhoudingContent = () => {
 
 // ─── BeurtstokjesContent ──────────────────────────────────────────────────────
 
-const SB_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const SB_H  = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
-
 const BeurtstokjesContent = () => {
   const [leerlingen, setLeerlingen] = useState<string[]>([]);
   const [display, setDisplay]       = useState<string>("");
@@ -634,9 +631,8 @@ const BeurtstokjesContent = () => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    fetch(`${SB_URL}/rest/v1/taakjes?id=eq.1`, { headers: SB_H })
-      .then(r => r.json())
-      .then(d => setLeerlingen(d?.[0]?.leerlingen ?? []));
+    supabase.from("taakjes").select("leerlingen").eq("id", 1).single()
+      .then(({ data }) => setLeerlingen(data?.leerlingen ?? []));
   }, []);
 
   const trek = () => {

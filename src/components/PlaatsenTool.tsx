@@ -1,9 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { X, Plus, RotateCw, Trash2 } from "lucide-react";
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
+import { supabase } from "@/lib/supabase";
 
 const PAD = 44;
 const DESK_W = 0.65;
@@ -29,13 +27,12 @@ const DEFAULT_LOKAAL: Lokaal = { breedte: 9, diepte: 7, bord: 4, bordWand: "bove
 
 async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } | null> {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/plaatsen?id=eq.1`, { headers: H });
-    const rows = await res.json();
-    if (Array.isArray(rows) && rows.length > 0) {
-      const lok = rows[0].lokaal ?? DEFAULT_LOKAAL;
+    const { data } = await supabase.from("plaatsen").select("lokaal,tafels").eq("id", 1).single();
+    if (data) {
+      const lok = data.lokaal ?? DEFAULT_LOKAAL;
       if (lok.bord == null) lok.bord = DEFAULT_LOKAAL.bord;
       if (lok.bordWand == null) lok.bordWand = DEFAULT_LOKAAL.bordWand;
-      const tafels = (rows[0].tafels ?? []).map((t: Tafel) => ({ rotation: 0 as Rotation, ...t }));
+      const tafels = (data.tafels ?? []).map((t: Tafel) => ({ rotation: 0 as Rotation, ...t }));
       return { lokaal: lok, tafels };
     }
   } catch {}
@@ -44,16 +41,8 @@ async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } 
 
 async function saveToSupabase(lokaal: Lokaal, tafels: Tafel[]): Promise<string | null> {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/plaatsen`, {
-      method: "POST",
-      headers: { ...H, Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify({ id: 1, lokaal, tafels }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      return `HTTP ${res.status}: ${body}`;
-    }
-    return null;
+    const { error } = await supabase.from("plaatsen").upsert({ id: 1, lokaal, tafels });
+    return error ? error.message : null;
   } catch (e) {
     return String(e);
   }

@@ -1,27 +1,25 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Trash2, BookOpen, Pencil, Check } from "lucide-react";
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
+import { supabase } from "@/lib/supabase";
 
 type Boek = { id: number; titel: string; auteur: string; naam: string; tip: string };
 
 const fetchBoeken = async (): Promise<Boek[]> => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/boekentips?order=id.desc`, { headers: H });
-  return res.json();
+  const { data } = await supabase.from("boekentips").select("*").order("id", { ascending: false });
+  return data ?? [];
 };
 
 const addBoek = async (b: Omit<Boek, "id">) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/boekentips`, { method: "POST", headers: H, body: JSON.stringify(b) });
+  await supabase.from("boekentips").insert(b);
 };
 
 const deleteBoek = async (id: number) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/boekentips?id=eq.${id}`, { method: "DELETE", headers: H });
+  await supabase.from("boekentips").delete().eq("id", id);
 };
 
 const updateBoek = async (id: number, data: Omit<Boek, "id">) => {
-  await fetch(`${SUPABASE_URL}/rest/v1/boekentips?id=eq.${id}`, { method: "PATCH", headers: H, body: JSON.stringify(data) });
+  await supabase.from("boekentips").update(data).eq("id", id);
 };
 
 const KLEUREN = [

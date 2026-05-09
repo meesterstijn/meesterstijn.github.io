@@ -68,29 +68,17 @@ const PlantSVG = ({ progress }: { progress: number }) => {
 
 // ─── Focus ────────────────────────────────────────────────────────────────────
 
-const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
+import { supabase } from "@/lib/supabase";
 
 const fetchPlantCount = async (): Promise<number> => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/counters?id=eq.1&select=value`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-  });
-  const data = await res.json();
-  return data?.[0]?.value ?? 0;
+  const { data } = await supabase.from("counters").select("value").eq("id", 1).single();
+  return data?.value ?? 0;
 };
 
 const incrementPlantCount = async (): Promise<number> => {
   const current = await fetchPlantCount();
   const next = current + 1;
-  await fetch(`${SUPABASE_URL}/rest/v1/counters?id=eq.1`, {
-    method: "PATCH",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ value: next }),
-  });
+  await supabase.from("counters").update({ value: next }).eq("id", 1);
   return next;
 };
 

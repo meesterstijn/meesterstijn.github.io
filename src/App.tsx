@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,20 +6,22 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Home, Maximize2, Minimize2 } from "lucide-react";
 import AuthGate from "@/components/AuthGate";
-import Index from "./pages/Index.tsx";
-import Planning from "./pages/Planning.tsx";
-import Bestanden from "./pages/Bestanden.tsx";
-import Weer from "./pages/Weer.tsx";
-import Klastools from "./pages/Klastools.tsx";
-import Focus from "./pages/Focus.tsx";
-import Whiteboard from "./pages/Whiteboard.tsx";
-import Klassenafspraken from "./pages/Klassenafspraken.tsx";
-import Beloningen from "./pages/Beloningen.tsx";
-import ToolsPage from "./pages/ToolsPage.tsx";
-import Spellen from "./pages/Spellen.tsx";
-import Taakjes from "./pages/Taakjes.tsx";
-import Dagritme from "./pages/Dagritme.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "@/context/AuthContext";
+
+const Index           = lazy(() => import("./pages/Index.tsx"));
+const Planning        = lazy(() => import("./pages/Planning.tsx"));
+const Bestanden       = lazy(() => import("./pages/Bestanden.tsx"));
+const Weer            = lazy(() => import("./pages/Weer.tsx"));
+const Klastools       = lazy(() => import("./pages/Klastools.tsx"));
+const Focus           = lazy(() => import("./pages/Focus.tsx"));
+const Whiteboard      = lazy(() => import("./pages/Whiteboard.tsx"));
+const Klassenafspraken = lazy(() => import("./pages/Klassenafspraken.tsx"));
+const Beloningen      = lazy(() => import("./pages/Beloningen.tsx"));
+const ToolsPage       = lazy(() => import("./pages/ToolsPage.tsx"));
+const Spellen         = lazy(() => import("./pages/Spellen.tsx"));
+const Taakjes         = lazy(() => import("./pages/Taakjes.tsx"));
+const Dagritme        = lazy(() => import("./pages/Dagritme.tsx"));
+const NotFound        = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -66,9 +68,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AuthProvider>
       <AuthGate>
       <BrowserRouter>
         <ScrollToTop />
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/planning" element={<Planning />} />
@@ -85,6 +89,7 @@ const App = () => (
           <Route path="/dagritme" element={<Dagritme />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         <div className="fixed bottom-5 left-5 z-50 flex gap-2">
           <FullscreenButton />
           <HomeButton />
@@ -95,6 +100,7 @@ const App = () => (
         </div>
       </BrowserRouter>
       </AuthGate>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
