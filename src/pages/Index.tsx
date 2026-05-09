@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {
   PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
   Puzzle, Crown, Music2, Youtube, Radio, Image as ImageIcon,
-  ArrowUpRight, ListChecks, Trophy,
+  ArrowUpRight, ListChecks, Trophy, ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { ClockCard } from "@/components/ClockCard";
@@ -29,6 +29,7 @@ const tiles: Tile[] = [
   { title: "Schaken",          desc: "Een potje schaak",          icon: Crown,        href: "https://www.chess.com/home", external: true, tone: "ink" },
   { title: "Klassenafspraken", desc: "Onze regels en afspraken",  icon: ListChecks,   href: "/klassenafspraken",          tone: "sage" },
   { title: "Beloningen",       desc: "Punten & beloningssysteem", icon: Trophy,        href: "/beloningen",                tone: "cream" },
+  { title: "Taakjes",          desc: "Klassikale taken verdelen",  icon: ClipboardList, href: "/taakjes",                   tone: "sage"  },
 ];
 
 const quickLinks = [
