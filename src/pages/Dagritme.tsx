@@ -76,9 +76,9 @@ const toneBg: Record<Tone, string> = {
   cream: "border-l-border bg-muted/40",
 };
 
-const toneOptions: Tone[] = ["coral", "sage", "ink", "cream", "amber"];
+const toneOptions: Tone[] = ["coral", "sage", "ink", "cream"];
 const toneLabels: Record<Tone, string> = {
-  coral: "Koraal", sage: "Salie", amber: "Geel", ink: "Teal", cream: "Licht",
+  coral: "Rood", sage: "Groen", amber: "Geel", ink: "Blauw", cream: "Grijs",
 };
 
 async function loadFromSupabase(): Promise<Day[] | null> {

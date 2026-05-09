@@ -52,7 +52,7 @@ const toneBg: Record<Tone, string> = {
 
 const toneOptions: Tone[] = ["coral", "sage", "ink", "cream"];
 const toneLabels: Record<Tone, string> = {
-  coral: "Koraal", sage: "Salie", amber: "Lime", ink: "Teal", cream: "Licht"
+  coral: "Rood", sage: "Groen", amber: "Geel", ink: "Blauw", cream: "Grijs"
 };
 
 const uid = () => Math.random().toString(36).slice(2, 8);
