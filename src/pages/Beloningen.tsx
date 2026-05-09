@@ -157,7 +157,7 @@ const Beloningen = () => {
             <div className="grid gap-8 lg:grid-cols-2">
 
               {/* Punten */}
-              <div className="animate-fade-up rounded-3xl border border-border bg-card p-8 shadow-soft">
+              <div className="animate-fade-up rounded-3xl border border-border bg-card p-5 md:p-8 shadow-soft">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-6">Klassenpunten</p>
                 <div className="flex flex-col items-center gap-6">
                   <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ const Beloningen = () => {
 
               {/* Beloningen */}
               <div className="animate-fade-up flex flex-col gap-4" style={{ animationDelay: "60ms" }}>
-                <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+                <div className="rounded-3xl border border-border bg-card p-4 md:p-6 shadow-soft">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-4">Nieuwe beloning</p>
                   <div className="flex flex-col gap-3">
                     <input
@@ -207,18 +207,18 @@ const Beloningen = () => {
                       placeholder="Naam van de beloning…"
                       className="rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
                     />
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                       <input
                         value={newGoal}
                         onChange={e => setNewGoal(e.target.value)}
                         placeholder="Punten nodig"
                         type="number"
                         min={1}
-                        className="w-36 rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
+                        className="w-full sm:w-36 rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
                       />
                       <button
                         onClick={handleAddReward}
-                        className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-smooth hover:opacity-90"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-smooth hover:opacity-90"
                       >
                         <Plus className="h-4 w-4" /> Toevoegen
                       </button>
