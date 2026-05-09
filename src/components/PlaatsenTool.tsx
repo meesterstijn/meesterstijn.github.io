@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { X, Plus, RotateCw, Trash2 } from "lucide-react";
 
 const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
@@ -12,7 +12,11 @@ const CHAIR_H = 0.20;
 const SNAP = 0.05;
 const DESK_SNAP = 0.15;
 
-type Tafel = { id: string; x: number; y: number; w: number; h: number; naam: string };
+type Rotation = 0 | 90 | 180 | 270;
+type Tafel = { id: string; x: number; y: number; w: number; h: number; rotation: Rotation; naam: string };
+
+// Effective layout dimensions after applying rotation
+const eff = (t: Tafel) => (t.rotation === 0 || t.rotation === 180) ? { w: t.w, h: t.h } : { w: t.h, h: t.w };
 type Wand = "boven" | "onder" | "links" | "rechts";
 type Lokaal = { breedte: number; diepte: number; bord: number; bordWand: Wand };
 type DragInfo = { id: string; startMouseX: number; startMouseY: number; startX: number; startY: number };
@@ -31,7 +35,8 @@ async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } 
       const lok = rows[0].lokaal ?? DEFAULT_LOKAAL;
       if (lok.bord == null) lok.bord = DEFAULT_LOKAAL.bord;
       if (lok.bordWand == null) lok.bordWand = DEFAULT_LOKAAL.bordWand;
-      return { lokaal: lok, tafels: rows[0].tafels ?? [] };
+      const tafels = (rows[0].tafels ?? []).map((t: Tafel) => ({ rotation: 0 as Rotation, ...t }));
+      return { lokaal: lok, tafels };
     }
   } catch {}
   return null;
@@ -51,11 +56,12 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   const [tafels, setTafels] = useState<Tafel[]>([]);
   const [lokaal, setLokaal] = useState<Lokaal>(DEFAULT_LOKAAL);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [svgSize, setSvgSize] = useState({ w: 800, h: 600 });
+  const [svgSize, setSvgSize] = useState({ w: 0, h: 0 });
   const [breedte, setBreedte] = useState("9");
   const [diepte, setDiepte] = useState("7");
   const [bord, setBord] = useState("4");
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const lokaalRef = useRef(lokaal);
@@ -84,13 +90,18 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   useEffect(() => {
     if (initialLoad.current) { initialLoad.current = false; return; }
     if (loading) return;
-    const timer = setTimeout(() => saveToSupabase(lokaal, tafels), 1200);
+    setSaveStatus("saving");
+    const timer = setTimeout(async () => {
+      await saveToSupabase(lokaal, tafels);
+      setSaveStatus("saved");
+    }, 1200);
     return () => clearTimeout(timer);
   }, [lokaal, tafels, loading]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    setSvgSize({ w: el.clientWidth, h: el.clientHeight });
     const ro = new ResizeObserver(entries => {
       const r = entries[0].contentRect;
       setSvgSize({ w: r.width, h: r.height });
@@ -113,14 +124,13 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     const tafel = tabelsRef.current.find(t => t.id === info.id);
     if (!tafel) return;
 
-    const rawX = clamp(info.startX + (clientX - info.startMouseX) / sc, 0, lok.breedte - tafel.w);
-    const rawY = clamp(info.startY + (clientY - info.startMouseY) / sc, 0, lok.diepte - tafel.h);
+    const { w: ew, h: eh } = eff(tafel);
+    const rawX = clamp(info.startX + (clientX - info.startMouseX) / sc, 0, lok.breedte - ew);
+    const rawY = clamp(info.startY + (clientY - info.startMouseY) / sc, 0, lok.diepte - eh);
 
-    // Grid snap as baseline
     let newX = snapTo(rawX);
     let newY = snapTo(rawY);
 
-    // Desk-to-desk edge snapping (overrides grid snap when close enough)
     const others = tabelsRef.current.filter(t => t.id !== info.id);
     let bestDx = DESK_SNAP;
     let bestDy = DESK_SNAP;
@@ -128,21 +138,22 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     let snapY: number | null = null;
 
     for (const o of others) {
-      const d1 = Math.abs(rawX - (o.x + o.w));
-      if (d1 < bestDx) { bestDx = d1; snapX = o.x + o.w; }
-      const d2 = Math.abs(rawX + tafel.w - o.x);
-      if (d2 < bestDx) { bestDx = d2; snapX = o.x - tafel.w; }
-      const d3 = Math.abs(rawY - (o.y + o.h));
-      if (d3 < bestDy) { bestDy = d3; snapY = o.y + o.h; }
-      const d4 = Math.abs(rawY + tafel.h - o.y);
-      if (d4 < bestDy) { bestDy = d4; snapY = o.y - tafel.h; }
+      const { w: ow, h: oh } = eff(o);
+      const d1 = Math.abs(rawX - (o.x + ow));
+      if (d1 < bestDx) { bestDx = d1; snapX = o.x + ow; }
+      const d2 = Math.abs(rawX + ew - o.x);
+      if (d2 < bestDx) { bestDx = d2; snapX = o.x - ew; }
+      const d3 = Math.abs(rawY - (o.y + oh));
+      if (d3 < bestDy) { bestDy = d3; snapY = o.y + oh; }
+      const d4 = Math.abs(rawY + eh - o.y);
+      if (d4 < bestDy) { bestDy = d4; snapY = o.y - eh; }
     }
 
     if (snapX !== null) newX = snapX;
     if (snapY !== null) newY = snapY;
 
-    newX = clamp(newX, 0, lok.breedte - tafel.w);
-    newY = clamp(newY, 0, lok.diepte - tafel.h);
+    newX = clamp(newX, 0, lok.breedte - ew);
+    newY = clamp(newY, 0, lok.diepte - eh);
 
     setTafels(prev => prev.map(t => t.id === info.id ? { ...t, x: newX, y: newY } : t));
   }, []);
@@ -181,7 +192,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     const row = Math.floor(count / 6);
     const x = snapTo(clamp(0.5 + col * 0.9, 0, lokaalRef.current.breedte - DESK_W));
     const y = snapTo(clamp(1.0 + row * 0.85, 0, lokaalRef.current.diepte - DESK_H));
-    const newTafel: Tafel = { id: uid(), x, y, w: DESK_W, h: DESK_H, naam: "" };
+    const newTafel: Tafel = { id: uid(), x, y, w: DESK_W, h: DESK_H, rotation: 0, naam: "" };
     setTafels(prev => [...prev, newTafel]);
     setSelectedId(newTafel.id);
   };
@@ -189,14 +200,26 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   const rotateTafel = (id: string) => {
     setTafels(prev => prev.map(t => {
       if (t.id !== id) return t;
-      const newW = t.h;
-      const newH = t.w;
+      const nextRot = ((t.rotation + 90) % 360) as Rotation;
+      const { w: ew, h: eh } = eff({ ...t, rotation: nextRot });
       return {
         ...t,
-        w: newW,
-        h: newH,
-        x: clamp(t.x, 0, Math.max(0, lokaalRef.current.breedte - newW)),
-        y: clamp(t.y, 0, Math.max(0, lokaalRef.current.diepte - newH)),
+        rotation: nextRot,
+        x: clamp(t.x, 0, Math.max(0, lokaalRef.current.breedte - ew)),
+        y: clamp(t.y, 0, Math.max(0, lokaalRef.current.diepte - eh)),
+      };
+    }));
+  };
+
+  const rotateAll = () => {
+    setTafels(prev => prev.map(t => {
+      const nextRot = ((t.rotation + 90) % 360) as Rotation;
+      const { w: ew, h: eh } = eff({ ...t, rotation: nextRot });
+      return {
+        ...t,
+        rotation: nextRot,
+        x: clamp(t.x, 0, Math.max(0, lokaalRef.current.breedte - ew)),
+        y: clamp(t.y, 0, Math.max(0, lokaalRef.current.diepte - eh)),
       };
     }));
   };
@@ -247,6 +270,9 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Klaslokaal</p>
               <h2 className="font-display text-xl font-semibold">Plaatsen</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {saveStatus === "saving" ? "Opslaan…" : "✓ Opgeslagen"}
+              </p>
             </div>
             <button onClick={onClose} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent">
               <X className="h-4 w-4" />
@@ -370,7 +396,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
                   onClick={() => rotateTafel(selectedTafel.id)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border px-2 py-2 text-xs font-semibold transition-smooth hover:border-accent"
                 >
-                  <RotateCw className="h-3.5 w-3.5" /> Draaien
+                  <RotateCw className="h-3.5 w-3.5" /> {selectedTafel.rotation}°
                 </button>
                 <button
                   onClick={() => deleteTafel(selectedTafel.id)}
@@ -383,8 +409,14 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
           )}
         </div>
 
-        {/* Fixed bottom: delete all */}
-        <div className="shrink-0 border-t border-border p-4">
+        {/* Fixed bottom: rotate all + delete all */}
+        <div className="shrink-0 border-t border-border p-4 flex flex-col gap-2">
+          <button
+            onClick={rotateAll}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background/60 p-3 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5"
+          >
+            <RotateCw className="h-4 w-4" /> Alle tafels draaien
+          </button>
           <button
             onClick={() => { setTafels([]); setSelectedId(null); }}
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50/50 p-3 text-sm font-semibold text-red-500 transition-smooth hover:bg-red-100 hover:border-red-400"
@@ -400,7 +432,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
         className="flex-1 overflow-hidden"
         onClick={() => setSelectedId(null)}
       >
-        <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
+        {svgSize.w > 0 && <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
           <defs>
             <clipPath id="plaatsen-room-clip">
               <rect x={offsetX} y={offsetY} width={roomW} height={roomH} />
@@ -484,13 +516,25 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
           {/* Desks */}
           <g clipPath="url(#plaatsen-room-clip)">
             {tafels.map(t => {
+              const { w: ew, h: eh } = eff(t);
               const sx = toX(t.x);
               const sy = toY(t.y);
-              const sw = t.w * scale;
-              const sh = t.h * scale;
+              const sw = ew * scale;
+              const sh = eh * scale;
               const isSelected = selectedId === t.id;
-              const chairH = CHAIR_H * scale;
-              const fontSize = Math.max(8, Math.min(12, sw / 5.5));
+              const cs = CHAIR_H * scale; // chair size
+              const cx = sx + sw / 2;
+              const cy = sy + sh / 2;
+              const fontSize = Math.max(8, Math.min(12, Math.min(sw, sh) / 3.5));
+
+              // Chair rect coords per rotation
+              const chairProps = (() => {
+                const gap = 3;
+                if (t.rotation === 0)   return { x: sx + sw * 0.15, y: sy + sh + gap, width: sw * 0.7, height: cs };
+                if (t.rotation === 90)  return { x: sx + sw + gap,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
+                if (t.rotation === 180) return { x: sx + sw * 0.15, y: sy - gap - cs,  width: sw * 0.7, height: cs };
+                return                         { x: sx - gap - cs,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
+              })();
 
               return (
                 <g
@@ -500,17 +544,12 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
                   onTouchStart={e => startDrag(e, t.id)}
                   onClick={e => { e.stopPropagation(); setSelectedId(t.id); }}
                 >
-                  {/* Chair */}
                   <rect
-                    x={sx + sw * 0.15}
-                    y={sy + sh + 3}
-                    width={sw * 0.7}
-                    height={chairH}
+                    {...chairProps}
                     rx={3}
                     fill={isSelected ? "#fcd34d" : "#bfdbfe"}
                     opacity={0.85}
                   />
-                  {/* Desk top */}
                   <rect
                     x={sx} y={sy} width={sw} height={sh}
                     rx={4}
@@ -518,11 +557,9 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
                     stroke={isSelected ? "#f59e0b" : "#60a5fa"}
                     strokeWidth={isSelected ? 2.5 : 1.5}
                   />
-                  {/* Name label */}
                   {t.naam && (
                     <text
-                      x={sx + sw / 2}
-                      y={sy + sh / 2 + fontSize * 0.35}
+                      x={cx} y={cy + fontSize * 0.35}
                       textAnchor="middle"
                       fontSize={fontSize}
                       fontWeight="600"
@@ -535,7 +572,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
               );
             })}
           </g>
-        </svg>
+        </svg>}
       </div>
     </div>
   );
