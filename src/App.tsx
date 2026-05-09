@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Home, Maximize2, Minimize2 } from "lucide-react";
 import AuthGate from "@/components/AuthGate";
 import Index from "./pages/Index.tsx";
 import Planning from "./pages/Planning.tsx";
@@ -28,7 +28,9 @@ const ScrollToTop = () => {
   return null;
 };
 
-const FullscreenButton = ({ side }: { side: "left" | "right" }) => {
+const btnCls = "flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-soft transition-smooth hover:border-primary hover:text-primary";
+
+const FullscreenButton = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -46,15 +48,17 @@ const FullscreenButton = ({ side }: { side: "left" | "right" }) => {
   };
 
   return (
-    <button
-      onClick={toggle}
-      title={isFullscreen ? "Volledig scherm verlaten" : "Volledig scherm"}
-      className={`fixed bottom-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-soft transition-smooth hover:border-primary hover:text-primary ${side === "left" ? "left-5" : "right-5"}`}
-    >
+    <button onClick={toggle} title={isFullscreen ? "Volledig scherm verlaten" : "Volledig scherm"} className={btnCls}>
       {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
     </button>
   );
 };
+
+const HomeButton = () => (
+  <Link to="/" title="Naar startpagina" className={btnCls}>
+    <Home className="h-4 w-4" />
+  </Link>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -79,8 +83,14 @@ const App = () => (
           <Route path="/taakjes" element={<Taakjes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <FullscreenButton side="left" />
-        <FullscreenButton side="right" />
+        <div className="fixed bottom-5 left-5 z-50 flex gap-2">
+          <FullscreenButton />
+          <HomeButton />
+        </div>
+        <div className="fixed bottom-5 right-5 z-50 flex gap-2">
+          <HomeButton />
+          <FullscreenButton />
+        </div>
       </BrowserRouter>
       </AuthGate>
     </TooltipProvider>
