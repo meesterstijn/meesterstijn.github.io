@@ -342,7 +342,23 @@ const Dagritme = () => {
 
         {/* ── Dagweergave ── */}
         {view === "dag" && (
-          <div className="flex gap-4 animate-fade-up">
+          <div className="animate-fade-up">
+
+          {/* Mobiel: alleen blokken */}
+          <div className="md:hidden space-y-2">
+            {week[dayIdx].blocks.map(b => (
+              <div key={b.id} className={`rounded-xl border-l-4 px-3 py-2.5 flex items-center ${toneBg[b.tone]}`}>
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{b.time}</span>
+                  <p className="text-sm font-medium leading-tight">{b.title}</p>
+                </div>
+                {b.subject && <p className="mt-0.5 text-xs text-muted-foreground">{b.subject}</p>}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: sidebar + kolommen */}
+          <div className="hidden md:flex gap-4">
 
             {/* Dag-sidebar */}
             <aside className="flex shrink-0 flex-col gap-1 w-40">
@@ -460,6 +476,7 @@ const Dagritme = () => {
                 </button>
               )}
             </div>
+          </div>
           </div>
         )}
 
