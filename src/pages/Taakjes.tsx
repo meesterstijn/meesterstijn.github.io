@@ -189,26 +189,26 @@ const Taakjes = () => {
                 : "Voeg leerlingen toe en verdeel ze over de taken."}
             </p>
           </div>
-          <div className="flex shrink-0 gap-3">
+          <div className="flex shrink-0 flex-wrap gap-2 sm:flex-nowrap sm:gap-3">
             {mode === "taken" ? (
               <>
                 <button
                   onClick={verschuif}
                   disabled={Object.keys(assignments).length === 0}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40 sm:flex-none"
                 >
                   <RotateCw className="h-4 w-4" /> Doorschuiven
                 </button>
                 <button
                   onClick={autoVerdelen}
                   disabled={leerlingen.length === 0}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40 sm:flex-none"
                 >
                   <Shuffle className="h-4 w-4" /> Willekeurig verdelen
                 </button>
                 <button
                   onClick={() => { setMode("beheer"); setSelected(null); }}
-                  className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90 sm:w-auto"
                 >
                   <Settings className="h-4 w-4" /> Leerlingen
                 </button>
