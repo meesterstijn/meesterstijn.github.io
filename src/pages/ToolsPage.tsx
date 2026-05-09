@@ -21,33 +21,44 @@ type Evt = {
 };
 
 const raw = [
+  { jaar: "± 5500 v.Chr.", y: -5500, titel: "Trijntje",                  era: "Prehistorie",          canon: true,  omschrijving: "Trijntje leefde rond 5500 voor Christus en is het oudst bekende menselijke skelet van Nederland. Haar botten werden in 1997 gevonden bij Hardinxveld-Giessendam. Ze was een jager-verzamelaarster van 40–60 jaar oud en werd begraven op een zandrug, naast drie honden." },
   { jaar: "± 3000 v.Chr.", y: -3000, titel: "Hunebedden",               era: "Prehistorie",          canon: true,  omschrijving: "Prehistorische grafmonumenten in Drenthe, gebouwd door de eerste bewoners van Nederland." },
   { jaar: "± 4 v.Chr.",   y: -4,     titel: "Geboorte van Jezus",       era: "Bijbelse tijd",                        omschrijving: "Jezus wordt geboren in Bethlehem. Het begin van de christelijke jaartelling." },
   { jaar: "± 33 n.Chr.", y: 33,     titel: "Kruisiging van Jezus",     era: "Bijbelse tijd",                        omschrijving: "Jezus wordt gekruisigd in Jeruzalem en staat op uit de dood. Het fundament van het christelijk geloof." },
   { jaar: "± 100 n.Chr.", y: 100,    titel: "De Romeinen",              era: "Romeinse tijd",        canon: true,  omschrijving: "De Romeinen vestigen zich in de Lage Landen en bouwen wegen en de limes langs de Rijn." },
   { jaar: "± 700",        y: 700,    titel: "Willibrord",               era: "Middeleeuwen",         canon: true,  omschrijving: "De missionaris Willibrord brengt het christendom naar de Lage Landen." },
   { jaar: "± 800",        y: 800,    titel: "Karel de Grote",           era: "Middeleeuwen",         canon: true,  omschrijving: "Karel de Grote regeert over een groot deel van Europa, waaronder de Lage Landen." },
+  { jaar: "± 1100",       y: 1098,   titel: "Hebban olla vogala",        era: "Middeleeuwen",         canon: true,  omschrijving: "'Hebban olla vogala' is de oudst bekende zin in het Nederlands, geschreven door een Vlaamse monnik rond 1100. De tekst betekent: 'Hebben alle vogels nesten gemaakt, behalve ik en jij.'" },
   { jaar: "± 1100",       y: 1100,   titel: "Hanze",                    era: "Middeleeuwen",         canon: true,  omschrijving: "Handelssteden sluiten zich aaneen in de Hanze, een machtig Europees handelsnetwerk." },
   { jaar: "± 1300",       y: 1300,   titel: "Floris V",                 era: "Middeleeuwen",         canon: true,  omschrijving: "Graaf Floris V bevordert de macht van Holland en wordt in 1296 vermoord." },
   { jaar: "± 1400",       y: 1400,   titel: "Bourgondiërs",             era: "Middeleeuwen",         canon: true,  omschrijving: "De Bourgondische hertogen verenigen de Lage Landen onder één bewind." },
   { jaar: "± 1469",       y: 1469,   titel: "Erasmus",                  era: "Renaissance",          canon: true,  omschrijving: "De humanist Erasmus pleit voor tolerantie en hervorming van de kerk." },
   { jaar: "1517",         y: 1517,   titel: "Reformatie",               era: "Renaissance",          canon: true,  omschrijving: "Maarten Luther publiceert zijn stellingen. De reformatie verspreidt zich door Europa." },
+  { jaar: "1533",         y: 1533,   titel: "Willem van Oranje",        era: "Renaissance",          canon: true,  omschrijving: "Willem van Oranje wordt in 1533 geboren en groeit op aan het Habsburgse hof. Later wordt hij de leider van de Nederlandse opstand tegen Spanje en de grondlegger van de Republiek der Zeven Verenigde Nederlanden." },
   { jaar: "1566",         y: 1566,   titel: "Beeldenstorm",             era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "Calvinisten vernielen katholieke kerkbeelden in de Lage Landen." },
   { jaar: "1568",         y: 1568,   titel: "Tachtigjarige Oorlog",     era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "De opstand tegen Spanje begint. Willem van Oranje leidt de strijd." },
   { jaar: "1572",         y: 1572,   titel: "Watergeuzen",              era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "De Watergeuzen nemen Den Briel in — het begin van de bevrijding van Holland." },
   { jaar: "1579",         y: 1579,   titel: "Unie van Utrecht",         era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "Zeven gewesten vormen de Unie van Utrecht, basis van de Republiek." },
   { jaar: "1581",         y: 1581,   titel: "Plakkaat van Verlatinghe", era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "De gewesten verklaren zich onafhankelijk van de Spaanse koning Filips II." },
+  { jaar: "1583",         y: 1583,   titel: "Hugo de Groot",            era: "Tachtigjarige Oorlog", canon: true,  omschrijving: "Hugo de Groot (Grotius) legt de grondslagen voor het internationale recht. Met zijn werk Mare Liberum pleit hij voor vrijheid van de zeeën en rechten van volken." },
   { jaar: "1602",         y: 1602,   titel: "VOC",                      era: "Gouden Eeuw",          canon: true,  omschrijving: "De Vereenigde Oostindische Compagnie wordt opgericht — eerste multinational ter wereld." },
+  { jaar: "1632",         y: 1632,   titel: "Spinoza",                  era: "Gouden Eeuw",          canon: true,  omschrijving: "Baruch de Spinoza, geboren in Amsterdam, is één van de grootste filosofen uit de Gouden Eeuw. Hij pleit voor vrijheid van denken en scheiding van godsdienst en politiek." },
+  { jaar: "1637",         y: 1637,   titel: "De Statenbijbel",          era: "Gouden Eeuw",          canon: true,  omschrijving: "In 1637 verschijnt de Statenbijbel, de eerste officiële Nederlandse vertaling van de Bijbel. De bijbel heeft grote invloed op de Nederlandse taal en cultuur." },
   { jaar: "± 1620",       y: 1620,   titel: "Rembrandt",                era: "Gouden Eeuw",          canon: true,  omschrijving: "Rembrandt van Rijn wordt één van de grootste schilders van de Gouden Eeuw." },
   { jaar: "± 1630",       y: 1630,   titel: "Slavernij",                era: "Gouden Eeuw",          canon: true,  omschrijving: "Nederland is actief betrokken bij de trans-Atlantische slavenhandel." },
   { jaar: "± 1650",       y: 1650,   titel: "Michiel de Ruyter",        era: "Gouden Eeuw",          canon: true,  omschrijving: "De zeeheld Michiel de Ruyter bevecht de Engelsen en Fransen op zee." },
   { jaar: "1672",         y: 1672,   titel: "Rampjaar",                 era: "Gouden Eeuw",          canon: true,  omschrijving: "Frankrijk en Engeland vallen Nederland aan. Johan de Witt wordt vermoord." },
   { jaar: "1795",         y: 1795,   titel: "Bataafse Republiek",       era: "Franse tijd",          canon: true,  omschrijving: "Franse troepen helpen Nederlandse patriotten een republiek te stichten." },
+  { jaar: "1806",         y: 1806,   titel: "Napoleon",                 era: "Franse tijd",          canon: true,  omschrijving: "Napoleon Bonaparte heeft grote invloed op Nederland. Zijn broer Lodewijk Napoleon wordt koning van Holland in 1806, waarna Napoleon Nederland inlijft bij het Franse keizerrijk." },
   { jaar: "1813",         y: 1813,   titel: "Koninkrijk Nederland",     era: "19e eeuw",             canon: true,  omschrijving: "Na de val van Napoleon wordt het Koninkrijk der Nederlanden gesticht onder Willem I." },
+  { jaar: "1815",         y: 1815,   titel: "Koning Willem I",          era: "19e eeuw",             canon: true,  omschrijving: "Koning Willem I regeert het nieuwe Koninkrijk der Nederlanden. Hij investeert in wegen, kanalen en onderwijs en legt de basis voor de moderne Nederlandse staat." },
   { jaar: "1830",         y: 1830,   titel: "Belgische opstand",        era: "19e eeuw",                           omschrijving: "België scheidt zich af van het Koninkrijk der Nederlanden." },
+  { jaar: "1839",         y: 1839,   titel: "De eerste spoorlijn",      era: "19e eeuw",             canon: true,  omschrijving: "Op 20 september 1839 rijdt de eerste trein in Nederland: van Amsterdam naar Haarlem. De stoomlocomotief de Arend trekt de wagons. Het begin van het Nederlandse spoorwegnet." },
+  { jaar: "1848",         y: 1848,   titel: "De Grondwet",              era: "19e eeuw",             canon: true,  omschrijving: "Thorbecke herziet de Grondwet in 1848. Nederland wordt een parlementaire democratie: ministers zijn verantwoordelijk aan het parlement en burgers krijgen grondrechten." },
   { jaar: "1860",         y: 1860,   titel: "Max Havelaar",             era: "19e eeuw",             canon: true,  omschrijving: "Multatuli publiceert Max Havelaar, een aanklacht tegen het koloniale bestuur in Indië." },
   { jaar: "1863",         y: 1863,   titel: "Afschaffing slavernij",    era: "19e eeuw",             canon: true,  omschrijving: "Nederland schaft de slavernij af in Suriname en de Antillen." },
   { jaar: "± 1880",       y: 1880,   titel: "Vincent van Gogh",         era: "19e eeuw",             canon: true,  omschrijving: "Vincent van Gogh schildert zijn beroemde werken en beïnvloedt de moderne kunst." },
+  { jaar: "1914–1918",    y: 1914,   titel: "Eerste Wereldoorlog",      era: "20e eeuw",             canon: true,  omschrijving: "De Eerste Wereldoorlog woedt in Europa van 1914 tot 1918. Nederland blijft neutraal, maar lijdt zwaar: vluchtelingen, voedseltekort en economische schade." },
   { jaar: "1917",         y: 1917,   titel: "Algemeen kiesrecht",       era: "20e eeuw",             canon: true,  omschrijving: "Mannen krijgen algemeen kiesrecht. Scholen worden gelijkgesteld." },
   { jaar: "1919",         y: 1919,   titel: "Vrouwenkiesrecht",         era: "20e eeuw",             canon: true,  omschrijving: "Vrouwen krijgen het recht om te stemmen in Nederland." },
   { jaar: "1940",         y: 1940,   titel: "Bezetting",                era: "Tweede Wereldoorlog",  canon: true,  omschrijving: "Duitsland valt Nederland binnen op 10 mei 1940. Rotterdam wordt gebombardeerd." },
@@ -55,6 +66,8 @@ const raw = [
   { jaar: "1944",         y: 1944,   titel: "Anne Frank",               era: "Tweede Wereldoorlog",  canon: true,  omschrijving: "Anne Frank schrijft haar dagboek tijdens de onderduik in Amsterdam." },
   { jaar: "1944",         y: 1944,   titel: "Hongerwinter",             era: "Tweede Wereldoorlog",  canon: true,  omschrijving: "Tienduizenden Nederlanders sterven van honger in de winter van 1944–1945." },
   { jaar: "1945",         y: 1945,   titel: "Bevrijding",               era: "Tweede Wereldoorlog",  canon: true,  omschrijving: "Op 5 mei 1945 capituleert Duitsland in Nederland. Nederland is bevrijd." },
+  { jaar: "1945–1949",   y: 1947,   titel: "Oorlog Nederlands-Indië",  era: "Wederopbouw",          canon: true,  omschrijving: "Na de Tweede Wereldoorlog roept Indonesië de onafhankelijkheid uit. Nederland voert twee 'politionele acties' uit. In 1949 erkent Nederland de onafhankelijkheid van Indonesië." },
+  { jaar: "1951",         y: 1951,   titel: "De televisie",             era: "Wederopbouw",          canon: true,  omschrijving: "In 1951 begint de Nederlandse televisie met uitzenden. Een nieuw medium dat informatie, cultuur en entertainment bij mensen thuis brengt en de samenleving ingrijpend verandert." },
   { jaar: "1953",         y: 1953,   titel: "Watersnoodramp",           era: "Wederopbouw",          canon: true,  omschrijving: "Een zware stormvloed treft Zeeland en Zuid-Holland. Ruim 1800 mensen verdrinken." },
   { jaar: "1975",         y: 1975,   titel: "Suriname onafhankelijk",   era: "Moderne tijd",         canon: true,  omschrijving: "Suriname wordt onafhankelijk van Nederland." },
   { jaar: "1995",         y: 1995,   titel: "Srebrenica",               era: "Moderne tijd",         canon: true,  omschrijving: "Bosnische Serviërs vermoorden duizenden moslims nabij Srebrenica." },
@@ -63,7 +76,7 @@ const raw = [
 
 // ─── Schaal ───────────────────────────────────────────────────────────────────
 
-const MIN_Y   = -3100;
+const MIN_Y   = -5700;
 const MAX_Y   = 2060;
 const PX      = 6;          // pixels per year
 const PAD     = 260;        // horizontal padding left/right
@@ -130,7 +143,7 @@ const Tijdlijn = ({ onClose }: { onClose: () => void }) => {
 
   // Tick-markeringen
   const ticks: number[] = [];
-  for (let y = -3000; y <= 2050; y += 500) ticks.push(y);
+  for (let y = -5500; y <= 2050; y += 500) ticks.push(y);
   for (let y = 1500; y <= 2025; y += 100) { if (y % 500 !== 0) ticks.push(y); }
   for (let y = 1900; y <= 2025; y += 25)  { if (y % 100 !== 0) ticks.push(y); }
 

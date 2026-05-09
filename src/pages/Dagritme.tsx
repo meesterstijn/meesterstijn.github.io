@@ -539,9 +539,6 @@ const Dagritme = () => {
           </div>
         )}
 
-        <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
-          Meester Stijn
-        </footer>
       </main>
     </div>
   );
