@@ -128,7 +128,7 @@ const Weer = () => {
           )}
 
           <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
-            Met liefde gemaakt voor de klas · Meester Stijn
+            Meester Stijn
           </footer>
         </main>
       </div>
