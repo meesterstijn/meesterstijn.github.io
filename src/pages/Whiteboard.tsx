@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload, Wrench } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand } from "lucide-react";
 
 const COLORS = ["#4682B4", "#10B981", "#F49E4C", "#AB3428", "#7C3AED", "#000000", "#ffffff"];
 const SIZES = [3, 6, 12, 20];
@@ -620,6 +620,81 @@ const VerhoudingContent = () => {
   );
 };
 
+// ─── BeurtstokjesContent ──────────────────────────────────────────────────────
+
+const SB_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
+const SB_H  = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+
+const BeurtstokjesContent = () => {
+  const [leerlingen, setLeerlingen] = useState<string[]>([]);
+  const [display, setDisplay]       = useState<string>("");
+  const [gekozen, setGekozen]       = useState<string | null>(null);
+  const [draaien, setDraaien]       = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    fetch(`${SB_URL}/rest/v1/taakjes?id=eq.1`, { headers: SB_H })
+      .then(r => r.json())
+      .then(d => setLeerlingen(d?.[0]?.leerlingen ?? []));
+  }, []);
+
+  const trek = () => {
+    if (draaien || leerlingen.length === 0) return;
+    setGekozen(null);
+    setDraaien(true);
+    const winnaar = leerlingen[Math.floor(Math.random() * leerlingen.length)];
+    const pool = leerlingen.length > 1 ? leerlingen : [winnaar];
+    let stap = 0;
+    const stapMax = 15; // ~1 seconde totaal
+    const volgende = () => {
+      stap++;
+      setDisplay(pool[Math.floor(Math.random() * pool.length)]);
+      if (stap < stapMax) {
+        const delay = 30 + Math.pow(stap / stapMax, 2) * 100;
+        timerRef.current = setTimeout(volgende, delay);
+      } else {
+        setDisplay(winnaar);
+        setGekozen(winnaar);
+        setDraaien(false);
+      }
+    };
+    volgende();
+  };
+
+  return (
+    <div className="flex flex-col gap-3 p-4" style={{ width: 240 }}>
+      {/* Naam display */}
+      <div className="flex h-20 items-center justify-center rounded-2xl border border-border bg-background">
+        {leerlingen.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center px-3">Voeg leerlingen toe via Taakjes of Beurtstokjes.</p>
+        ) : (
+          <span
+            className="font-display font-bold text-center px-3 leading-tight"
+            style={{
+              fontSize: display.length > 14 ? "1.1rem" : display.length > 8 ? "1.4rem" : "1.8rem",
+              color: gekozen ? "hsl(var(--accent))" : "hsl(var(--foreground))",
+              transition: "color 0.4s",
+            }}
+          >
+            {display || "—"}
+          </span>
+        )}
+      </div>
+
+      {/* Trek-knop */}
+      <button
+        onClick={trek}
+        disabled={draaien || leerlingen.length === 0}
+        className="rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition-smooth hover:opacity-90 disabled:opacity-40"
+      >
+        {draaien ? "…" : "Trek!"}
+      </button>
+
+    </div>
+  );
+};
+
 // ─── Whiteboard ───────────────────────────────────────────────────────────────
 
 const Whiteboard = () => {
@@ -638,6 +713,7 @@ const Whiteboard = () => {
   const [showOppervlakte, setShowOppervlakte] = useState(false);
   const [showInhoud, setShowInhoud] = useState(false);
   const [showGeld, setShowGeld] = useState(false);
+  const [showBeurtstokjes, setShowBeurtstokjes] = useState(false);
   const [showVerhouding, setShowVerhouding] = useState(false);
   const [wijzerAan, setWijzerAan] = useState(false);
   const [wijzerPos, setWijzerPos] = useState({ x: 50, y: 50 });
@@ -820,6 +896,12 @@ const Whiteboard = () => {
             onTouchEnd={stopDraw}
           />
 
+          {showBeurtstokjes && (
+            <DraggableWidget title="Beurtstokjes" initialPos={{ x: 800, y: 20 }} onClose={() => setShowBeurtstokjes(false)}>
+              <BeurtstokjesContent />
+            </DraggableWidget>
+          )}
+
           {showStoplicht && (
             <DraggableWidget title="Stoplicht" initialPos={{ x: 20, y: 20 }} onClose={() => setShowStoplicht(false)}>
               <StoplichtContent />
@@ -980,32 +1062,41 @@ const Whiteboard = () => {
         {/* Stoplicht toggle */}
         <button
           onClick={() => setShowStoplicht(v => !v)}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showStoplicht ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          className={`shrink-0 flex items-center justify-center rounded-xl border px-3 transition-smooth hover:border-accent ${showStoplicht ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ height: 36 }}
         >
           <span className="flex gap-0.5">
             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#EEA081" }} />
             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#FFE48D" }} />
             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: "#98F797" }} />
           </span>
-          Stoplicht
         </button>
 
         {/* Timer toggle */}
         <button
           onClick={() => setShowTimer(v => !v)}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          className={`shrink-0 flex items-center justify-center rounded-xl border px-3 transition-smooth hover:border-accent ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ height: 36 }}
         >
-          <Clock className="h-4 w-4" />
-          Timer
+          <Hourglass className="h-4 w-4" />
         </button>
 
         {/* Tekstvak toggle */}
         <button
           onClick={() => setShowTekst(v => !v)}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showTekst ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          className={`shrink-0 flex items-center justify-center rounded-xl border px-3 transition-smooth hover:border-accent ${showTekst ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ height: 36 }}
         >
           <Type className="h-4 w-4" />
-          Tekst
+        </button>
+
+        {/* Beurtstokjes toggle */}
+        <button
+          onClick={() => setShowBeurtstokjes(v => !v)}
+          className={`shrink-0 flex items-center justify-center rounded-xl border px-3 transition-smooth hover:border-accent ${showBeurtstokjes ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ height: 36 }}
+        >
+          <Hand className="h-4 w-4" />
         </button>
 
         {/* Foto toggle */}
