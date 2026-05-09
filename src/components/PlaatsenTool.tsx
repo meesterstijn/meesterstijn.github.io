@@ -252,14 +252,6 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   for (let x = 0; x <= lokaal.breedte + 0.01; x += 0.5) vLines.push(parseFloat(x.toFixed(1)));
   for (let y = 0; y <= lokaal.diepte + 0.01; y += 0.5) hLines.push(parseFloat(y.toFixed(1)));
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "hsl(334 10% 97%)" }}>
-        <p className="text-muted-foreground">Indeling laden…</p>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex overflow-hidden" style={{ background: "hsl(334 10% 97%)" }}>
       {/* Sidebar */}
@@ -429,10 +421,15 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
       {/* SVG canvas */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-hidden"
+        className="relative flex-1 overflow-hidden"
         onClick={() => setSelectedId(null)}
       >
-        {svgSize.w > 0 && <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-muted-foreground">Indeling laden…</p>
+          </div>
+        )}
+        {!loading && svgSize.w > 0 && <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
           <defs>
             <clipPath id="plaatsen-room-clip">
               <rect x={offsetX} y={offsetY} width={roomW} height={roomH} />
