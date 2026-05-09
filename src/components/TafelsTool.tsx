@@ -14,11 +14,18 @@ const shuffle = (arr: Card[]): Card[] => {
 
 const makeCards = (selected: number[]): Card[] => {
   const cards: Card[] = [];
-  for (const b of selected)
-    for (let a = 1; a <= 12; a++)
+  for (const b of selected) {
+    const max = b >= 11 ? 12 : 10;
+    for (let a = 1; a <= max; a++) {
       cards.push({ a, b });
+      cards.push({ a, b }); // elke som twee keer
+    }
+  }
   return shuffle(cards);
 };
+
+const sommenCount = (selected: number[]) =>
+  selected.reduce((n, b) => n + (b >= 11 ? 12 : 10) * 2, 0);
 
 const TafelsTool = ({ onClose }: { onClose: () => void }) => {
   const [mode, setMode] = useState<"menu" | "keuze" | "flitsen">("menu");
@@ -120,7 +127,7 @@ const TafelsTool = ({ onClose }: { onClose: () => void }) => {
               disabled={selected.length === 0}
               className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition-smooth hover:opacity-90 disabled:opacity-30"
             >
-              <Zap className="h-4 w-4" /> Start flitsen ({selected.length === 0 ? "kies een tafel" : `${selected.length * 12} sommen`})
+              <Zap className="h-4 w-4" /> Start flitsen ({selected.length === 0 ? "kies een tafel" : `${sommenCount(selected)} sommen`})
             </button>
           </div>
         </div>
@@ -133,17 +140,19 @@ const TafelsTool = ({ onClose }: { onClose: () => void }) => {
 
           <button
             onClick={() => revealed ? volgende() : setRevealed(true)}
-            className="w-full max-w-sm rounded-3xl border-2 border-border bg-card p-12 text-center shadow-tile transition-smooth hover:border-accent"
+            className="w-full max-w-xl rounded-3xl border-2 border-border bg-card px-14 py-10 text-center shadow-tile transition-smooth hover:border-accent"
           >
-            <p className="font-display text-6xl font-semibold">
+            <p className="font-display text-6xl font-semibold whitespace-nowrap">
               {card.a} × {card.b} ={" "}
-              {revealed
-                ? <span className="text-accent">{card.a * card.b}</span>
-                : <span className="text-muted-foreground/30">?</span>}
+              <span className="inline-block min-w-[3ch] text-center align-baseline">
+                {revealed
+                  ? <span className="text-accent">{card.a * card.b}</span>
+                  : <span className="text-muted-foreground/30">?</span>}
+              </span>
             </p>
-            {!revealed && (
-              <p className="mt-5 text-xs text-muted-foreground">Tik om het antwoord te zien</p>
-            )}
+            <p className={`mt-4 text-xs text-muted-foreground transition-opacity ${revealed ? "opacity-0" : "opacity-100"}`}>
+              Tik om het antwoord te zien
+            </p>
           </button>
 
           <div className="flex gap-3">
