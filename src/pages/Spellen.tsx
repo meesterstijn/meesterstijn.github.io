@@ -1,8 +1,9 @@
 import { useState, lazy, Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Star } from "lucide-react";
+import { Star, Zap } from "lucide-react";
 
 const DagelijkseChallenge = lazy(() => import("@/components/DagelijkseChallenge"));
+const Energizers = lazy(() => import("@/components/Energizers"));
 
 const Spellen = () => {
   const [open, setOpen] = useState<string | null>(null);
@@ -31,6 +32,19 @@ const Spellen = () => {
                 <p className="mt-1 text-sm text-muted-foreground">Elke dag een nieuwe uitdaging voor de klas.</p>
               </div>
             </button>
+
+            <button
+              onClick={() => setOpen("energizers")}
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft text-left transition-smooth hover:-translate-y-1 hover:shadow-tile hover:border-accent"
+            >
+              <div className="rounded-2xl bg-secondary p-3">
+                <Zap className="h-6 w-6 text-accent" strokeWidth={1.6} />
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold">Energizers</p>
+                <p className="mt-1 text-sm text-muted-foreground">Korte activiteiten om de klas wakker te schudden.</p>
+              </div>
+            </button>
           </div>
 
           <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
@@ -42,6 +56,12 @@ const Spellen = () => {
       {open === "challenge" && (
         <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-paper text-muted-foreground">Laden…</div>}>
           <DagelijkseChallenge onClose={() => setOpen(null)} />
+        </Suspense>
+      )}
+
+      {open === "energizers" && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-paper text-muted-foreground">Laden…</div>}>
+          <Energizers onClose={() => setOpen(null)} />
         </Suspense>
       )}
     </>
