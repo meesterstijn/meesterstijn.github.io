@@ -9,7 +9,7 @@ import AuthGate from "@/components/AuthGate";
 import Index from "./pages/Index.tsx";
 import Planning from "./pages/Planning.tsx";
 import Bestanden from "./pages/Bestanden.tsx";
-import Quotes from "./pages/Quotes.tsx";
+import Weer from "./pages/Weer.tsx";
 import Klastools from "./pages/Klastools.tsx";
 import Focus from "./pages/Focus.tsx";
 import Whiteboard from "./pages/Whiteboard.tsx";
@@ -68,7 +68,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/planning" element={<Planning />} />
           <Route path="/bestanden" element={<Bestanden />} />
-          <Route path="/quotes" element={<Quotes />} />
+          <Route path="/weer" element={<Weer />} />
           <Route path="/klastools" element={<Klastools />} />
           <Route path="/focus" element={<Focus />} />
           <Route path="/whiteboard" element={<Whiteboard />} />

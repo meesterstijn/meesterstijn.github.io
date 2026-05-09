@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, Trash2, Shuffle, Settings, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Shuffle, Settings, ChevronLeft, RotateCw } from "lucide-react";
 
 const SUPABASE_URL = "https://fxcsqxshjnxlknnmfsbv.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y3NxeHNoam54bGtubm1mc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzQwNTgsImV4cCI6MjA5MzcxMDA1OH0.MVp882LWEZVMW33l1Ld94BnFbvCrIzStq02-9ylpYnc";
@@ -127,6 +127,19 @@ const Taakjes = () => {
     setSelected(null);
   };
 
+  const verschuif = () => {
+    const next: Assignments = {};
+    TAKEN.forEach((taak, i) => {
+      const namen = assignments[taak.id];
+      if (namen?.length) {
+        const volgendId = TAKEN[(i + 1) % TAKEN.length].id;
+        next[volgendId] = [...(next[volgendId] ?? []), ...namen];
+      }
+    });
+    saveAssignments(next);
+    setSelected(null);
+  };
+
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, taakId: string, naam: string) => {
     setDragSrc({ taakId, naam });
@@ -179,6 +192,13 @@ const Taakjes = () => {
           <div className="flex shrink-0 gap-3">
             {mode === "taken" ? (
               <>
+                <button
+                  onClick={verschuif}
+                  disabled={Object.keys(assignments).length === 0}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40"
+                >
+                  <RotateCw className="h-4 w-4" /> Doorschuiven
+                </button>
                 <button
                   onClick={autoVerdelen}
                   disabled={leerlingen.length === 0}

@@ -5,7 +5,7 @@ const links = [
   { to: "/", label: "Start" },
   { to: "/planning", label: "Planning" },
   { to: "/bestanden", label: "Bestanden" },
-  { to: "/quotes", label: "Quotes" },
+  { to: "/weer", label: "🌤️ Weer" },
 ];
 
 export const SiteHeader = () => {
