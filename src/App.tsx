@@ -18,6 +18,7 @@ import Beloningen from "./pages/Beloningen.tsx";
 import ToolsPage from "./pages/ToolsPage.tsx";
 import Spellen from "./pages/Spellen.tsx";
 import Taakjes from "./pages/Taakjes.tsx";
+import Dagritme from "./pages/Dagritme.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/spellen" element={<Spellen />} />
           <Route path="/taakjes" element={<Taakjes />} />
+          <Route path="/dagritme" element={<Dagritme />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <div className="fixed bottom-5 left-5 z-50 flex gap-2">

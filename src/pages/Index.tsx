@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
-  Puzzle, Crown, Music2, Youtube, Radio, Image as ImageIcon,
+  Puzzle, LayoutList, Music2, Youtube, Radio, Image as ImageIcon,
   ArrowUpRight, ListChecks, Trophy, ClipboardList,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ const tiles: Tile[] = [
   { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "coral" },
   { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
   { title: "Spellen",    desc: "Pauzespellen & challenges",  icon: Puzzle,       href: "/spellen",   tone: "cream" },
-  { title: "Schaken",          desc: "Een potje schaak",          icon: Crown,        href: "https://www.chess.com/home", external: true, tone: "ink" },
+  { title: "Dagritme",         desc: "Het weekrooster van de klas", icon: LayoutList,  href: "/dagritme",                  tone: "ink" },
   { title: "Klassenafspraken", desc: "Onze regels en afspraken",  icon: ListChecks,   href: "/klassenafspraken",          tone: "sage" },
   { title: "Beloningen",       desc: "Punten & beloningssysteem", icon: Trophy,        href: "/beloningen",                tone: "cream" },
   { title: "Taakjes",          desc: "Klassikale taken verdelen",  icon: ClipboardList, href: "/taakjes",                   tone: "sage"  },

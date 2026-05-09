@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Star, Zap } from "lucide-react";
+import { Star, Zap, Crown, ArrowUpRight } from "lucide-react";
 
 const DagelijkseChallenge = lazy(() => import("@/components/DagelijkseChallenge"));
 const Energizers = lazy(() => import("@/components/Energizers"));
@@ -45,6 +45,24 @@ const Spellen = () => {
                 <p className="mt-1 text-sm text-muted-foreground">Korte activiteiten om de klas wakker te schudden.</p>
               </div>
             </button>
+
+            <a
+              href="https://www.chess.com/home"
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft text-left transition-smooth hover:-translate-y-1 hover:shadow-tile hover:border-accent"
+            >
+              <div className="flex w-full items-start justify-between">
+                <div className="rounded-2xl bg-secondary p-3">
+                  <Crown className="h-6 w-6 text-primary" strokeWidth={1.6} />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-50 transition-smooth group-hover:opacity-100" />
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold">Schaken</p>
+                <p className="mt-1 text-sm text-muted-foreground">Een potje schaak op chess.com.</p>
+              </div>
+            </a>
           </div>
 
           <footer className="mt-20 border-t border-border pt-6 text-center text-sm text-muted-foreground">
