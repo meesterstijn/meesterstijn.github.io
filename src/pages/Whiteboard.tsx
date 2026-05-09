@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Clock, X, Type, Image as ImageIcon, Upload, Wrench } from "lucide-react";
@@ -365,53 +366,215 @@ const MetriekTrap = ({ title, units, factor }: { title: string; units: string[];
 
 // ─── Geld ─────────────────────────────────────────────────────────────────────
 
+const geldUid = () => Math.random().toString(36).slice(2, 9);
+
+type WorkspaceItem = { id: string; kind: "biljet" | "munt"; v: number; x: number; y: number };
+type DragState    = { kind: "biljet" | "munt"; v: number; x: number; y: number; offX: number; offY: number };
+
 const BILJETTEN = [
-  { v: 500, label: "€500", bg: "#8B5CF6" },
-  { v: 200, label: "€200", bg: "#F59E0B" },
-  { v: 100, label: "€100", bg: "#10B981" },
-  { v: 50,  label: "€50",  bg: "#F97316" },
-  { v: 20,  label: "€20",  bg: "#3B82F6" },
-  { v: 10,  label: "€10",  bg: "#EF4444" },
-  { v: 5,   label: "€5",   bg: "#6B7280" },
+  { v: 500, bg: "#7c4fa0" },
+  { v: 200, bg: "#c8890a" },
+  { v: 100, bg: "#2e8b4e" },
+  { v: 50,  bg: "#d4660a" },
+  { v: 20,  bg: "#2563a8" },
+  { v: 10,  bg: "#b82020" },
+  { v: 5,   bg: "#5a7a5a" },
 ];
 const MUNTEN = [
-  { v: 2,    label: "€2"   },
-  { v: 1,    label: "€1"   },
-  { v: 0.5,  label: "50ct" },
-  { v: 0.2,  label: "20ct" },
-  { v: 0.1,  label: "10ct" },
-  { v: 0.05, label: "5ct"  },
-  { v: 0.02, label: "2ct"  },
-  { v: 0.01, label: "1ct"  },
+  { v: 2,    label: "€2",   copper: false, biMetal: true  },
+  { v: 1,    label: "€1",   copper: false, biMetal: true  },
+  { v: 0.5,  label: "50ct", copper: false, biMetal: false },
+  { v: 0.2,  label: "20ct", copper: false, biMetal: false },
+  { v: 0.1,  label: "10ct", copper: false, biMetal: false },
+  { v: 0.05, label: "5ct",  copper: true,  biMetal: false },
 ];
 
-const GeldContent = () => {
-  const [counts, setCounts] = useState<Record<number, number>>({});
-  const adj = (v: number, d: number) => setCounts(p => ({ ...p, [v]: Math.max(0, (p[v] || 0) + d) }));
-  const total = [...BILJETTEN, ...MUNTEN].reduce((s, x) => s + (counts[x.v] || 0) * x.v, 0);
-  const Row = ({ v, label, bg }: { v: number; label: string; bg?: string }) => (
-    <div className="flex items-center gap-2 py-0.5">
-      <div className={`flex h-7 w-14 shrink-0 items-center justify-center rounded text-xs font-bold text-white`}
-        style={{ backgroundColor: bg ?? "#C69B34" }}>{label}</div>
-      <span className="w-5 text-center text-sm tabular-nums">{counts[v] || 0}</span>
-      <button onClick={() => adj(v, -1)} className="h-6 w-6 rounded border border-border text-xs leading-none hover:border-accent">−</button>
-      <button onClick={() => adj(v, 1)}  className="h-6 w-6 rounded border border-border text-xs leading-none hover:border-accent">+</button>
+const BiljetImg = ({ v, bg }: { v: number; bg: string }) => (
+  <svg viewBox="0 0 90 46" width="90" height="46" style={{ display: "block", flexShrink: 0, borderRadius: 4 }}>
+    <rect width="90" height="46" rx="4" fill={bg} />
+    {/* inner frame */}
+    <rect x="2" y="2" width="86" height="42" rx="3" fill="none" stroke="white" strokeOpacity="0.25" strokeWidth="1" />
+    {/* arch / window motif left */}
+    <rect x="6" y="8" width="16" height="22" rx="8 8 2 2" fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="1.2" />
+    <rect x="9" y="22" width="10" height="8" rx="1" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="0.8" />
+    {/* EU stars */}
+    {[0,1,2,3,4,5,6,7,8,9,10,11].map(i => {
+      const a = (i * 30 - 90) * Math.PI / 180;
+      return <circle key={i} cx={14 + 10 * Math.cos(a)} cy={38 + 4 * Math.sin(a)} r="0.8" fill="gold" fillOpacity="0.7" />;
+    })}
+    {/* denomination */}
+    <text x="62" y="30" fontFamily="Georgia,serif" fontSize="20" fontWeight="bold" fill="white" textAnchor="middle">€{v}</text>
+    <text x="62" y="41" fontFamily="sans-serif" fontSize="5.5" fill="white" fillOpacity="0.55" textAnchor="middle" letterSpacing="1">EURO</text>
+  </svg>
+);
+
+const MuntImg = ({ v, label, copper, biMetal }: { v: number; label: string; copper: boolean; biMetal: boolean }) => {
+  const rim   = copper ? "#7a3a10" : biMetal && v === 2 ? "#7a7830" : "#7a5a0a";
+  const face  = copper ? "#c46a28" : "#c9a020";
+  const inner = "#d4d0c0";
+  const textColor = biMetal && v === 2 ? "#5a4800" : "white";
+  const fontSize  = v >= 1 ? 9 : v >= 0.1 ? 8 : 7;
+  return (
+    <svg viewBox="0 0 44 44" width="44" height="44" style={{ display: "block", flexShrink: 0 }}>
+      <circle cx="22" cy="22" r="21" fill={rim} />
+      <circle cx="22" cy="22" r="19" fill={face} />
+      {biMetal && v === 2 && <circle cx="22" cy="22" r="12" fill={inner} />}
+      {biMetal && v === 1 && (
+        <>
+          <circle cx="22" cy="22" r="19" fill="#c9a020" />
+          <circle cx="22" cy="22" r="12" fill={face} />
+        </>
+      )}
+      <circle cx="22" cy="22" r="19" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1" />
+      {/* EU stars ring */}
+      {[0,1,2,3,4,5,6,7,8,9,10,11].map(i => {
+        const a = (i * 30 - 90) * Math.PI / 180;
+        return <circle key={i} cx={22 + 16 * Math.cos(a)} cy={22 + 16 * Math.sin(a)} r="0.9" fill="gold" fillOpacity="0.6" />;
+      })}
+      <text x="22" y="26" fontFamily="sans-serif" fontSize={fontSize} fontWeight="bold" fill={textColor} textAnchor="middle">{label}</text>
+    </svg>
+  );
+};
+
+const WorkspaceMoneyItem = ({ item, onRemove, onMove }: {
+  item: WorkspaceItem;
+  onRemove: (id: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
+}) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const ox = e.clientX - item.x;
+    const oy = e.clientY - item.y;
+    const onPMove = (ev: PointerEvent) => onMove(item.id, ev.clientX - ox, ev.clientY - oy);
+    const onPUp   = () => { window.removeEventListener("pointermove", onPMove); window.removeEventListener("pointerup", onPUp); };
+    window.addEventListener("pointermove", onPMove);
+    window.addEventListener("pointerup", onPUp);
+  };
+  const biljet = BILJETTEN.find(b => b.v === item.v);
+  const munt   = MUNTEN.find(m => m.v === item.v);
+  return (
+    <div
+      style={{ position: "absolute", left: item.x, top: item.y, touchAction: "none", userSelect: "none", cursor: "grab" }}
+      onPointerDown={handlePointerDown}
+      onDoubleClick={e => { e.stopPropagation(); onRemove(item.id); }}
+    >
+      {item.kind === "biljet" && biljet
+        ? <BiljetImg v={item.v} bg={biljet.bg} />
+        : munt ? <MuntImg v={item.v} label={munt.label} copper={munt.copper} biMetal={munt.biMetal} /> : null}
     </div>
   );
+};
+
+const GeldContent = () => {
+  const [items,    setItems]    = useState<WorkspaceItem[]>([]);
+  const [dragging, setDragging] = useState<DragState | null>(null);
+  const wsRef  = useRef<HTMLDivElement>(null);
+  const total  = items.reduce((s, i) => s + i.v, 0);
+
+  const onMove   = (id: string, x: number, y: number) =>
+    setItems(prev => prev.map(i => i.id === id ? { ...i, x, y } : i));
+  const onRemove = (id: string) => setItems(prev => prev.filter(i => i.id !== id));
+
+  const startPickerDrag = (e: React.PointerEvent, kind: "biljet" | "munt", v: number, offX: number, offY: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging({ kind, v, x: e.clientX - offX, y: e.clientY - offY, offX, offY });
+    const onPMove = (ev: PointerEvent) =>
+      setDragging(d => d ? { ...d, x: ev.clientX - offX, y: ev.clientY - offY } : null);
+    const onPUp = (ev: PointerEvent) => {
+      if (wsRef.current) {
+        const rect = wsRef.current.getBoundingClientRect();
+        if (ev.clientX >= rect.left && ev.clientX <= rect.right &&
+            ev.clientY >= rect.top  && ev.clientY <= rect.bottom) {
+          setItems(prev => [...prev, {
+            id: geldUid(), kind, v,
+            x: ev.clientX - rect.left - offX,
+            y: ev.clientY - rect.top  - offY,
+          }]);
+        }
+      }
+      setDragging(null);
+      window.removeEventListener("pointermove", onPMove);
+      window.removeEventListener("pointerup",   onPUp);
+    };
+    window.addEventListener("pointermove", onPMove);
+    window.addEventListener("pointerup",   onPUp);
+  };
+
+  const ghostBiljet = dragging?.kind === "biljet" ? BILJETTEN.find(b => b.v === dragging.v) : null;
+  const ghostMunt   = dragging?.kind === "munt"   ? MUNTEN.find(m => m.v === dragging.v)    : null;
+
   return (
-    <div className="p-4" style={{ width: 340 }}>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Biljetten</p>
-      {BILJETTEN.map(b => <Row key={b.v} {...b} />)}
-      <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Munten</p>
-      <div className="grid grid-cols-2 gap-x-3">
-        {MUNTEN.map(m => <Row key={m.v} v={m.v} label={m.label} />)}
+    <>
+    <div style={{ display: "flex", width: 760, height: 440 }}>
+      {/* Picker — biljetten */}
+      <div style={{ width: 120, padding: "12px 8px", borderRight: "1px solid var(--border)", overflowY: "auto", flexShrink: 0 }}>
+        <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--muted-foreground)", marginBottom: 8 }}>Biljetten</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {BILJETTEN.map(b => (
+            <div key={b.v} style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+              onPointerDown={e => startPickerDrag(e, "biljet", b.v, 45, 23)}>
+              <BiljetImg v={b.v} bg={b.bg} />
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/10 px-4 py-2">
-        <span className="text-sm font-semibold">Totaal</span>
-        <span className="font-display text-xl font-bold">€ {total.toFixed(2)}</span>
+
+      {/* Picker — munten */}
+      <div style={{ width: 68, padding: "12px 8px", borderRight: "1px solid var(--border)", overflowY: "auto", flexShrink: 0 }}>
+        <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--muted-foreground)", marginBottom: 8 }}>Munten</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {MUNTEN.map(m => (
+            <div key={m.v} style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+              onPointerDown={e => startPickerDrag(e, "munt", m.v, 22, 22)}>
+              <MuntImg v={m.v} label={m.label} copper={m.copper} biMetal={m.biMetal} />
+            </div>
+          ))}
+        </div>
       </div>
-      <button onClick={() => setCounts({})} className="mt-1.5 w-full text-center text-xs text-muted-foreground hover:text-accent transition-smooth">Wis alles</button>
+
+      {/* Werkblad */}
+      <div ref={wsRef} style={{ flex: 1, position: "relative", background: "#faf9f7", overflow: "hidden" }}>
+        {items.length === 0 && !dragging && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: 13, pointerEvents: "none" }}>
+            Sleep geld hierheen
+          </div>
+        )}
+        {items.map(item => (
+          <WorkspaceMoneyItem key={item.id} item={item} onRemove={onRemove} onMove={onMove} />
+        ))}
+        {items.length > 0 && (
+          <>
+            <div style={{ position: "absolute", bottom: 12, right: 12, background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "6px 14px", display: "flex", gap: 12, alignItems: "center" }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Totaal</span>
+              <span style={{ fontSize: 18, fontWeight: 700 }}>€ {total.toFixed(2)}</span>
+              <button onClick={() => setItems([])} style={{ fontSize: 11, color: "var(--muted-foreground)", cursor: "pointer", background: "none", border: "none" }}>Wis</button>
+            </div>
+            <div style={{ position: "absolute", top: 8, right: 10, fontSize: 10, color: "var(--muted-foreground)", pointerEvents: "none" }}>
+              Dubbelklik om te verwijderen
+            </div>
+          </>
+        )}
+      </div>
     </div>
+
+    {/* Sleepghost — gerenderd buiten de widget zodat hij niet wordt afgeknipt */}
+    {dragging && createPortal(
+      <div style={{
+        position: "fixed", left: dragging.x, top: dragging.y,
+        pointerEvents: "none", zIndex: 9999,
+        opacity: 0.88,
+        transform: "scale(1.08) rotate(3deg)",
+        filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.3))",
+        transition: "transform 0.05s",
+      }}>
+        {ghostBiljet && <BiljetImg v={dragging.v} bg={ghostBiljet.bg} />}
+        {ghostMunt   && <MuntImg v={dragging.v} label={ghostMunt.label} copper={ghostMunt.copper} biMetal={ghostMunt.biMetal} />}
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
 
