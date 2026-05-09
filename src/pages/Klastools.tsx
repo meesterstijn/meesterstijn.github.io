@@ -67,27 +67,29 @@ const Timer = () => {
           </div>
         </div>
 
-        {/* Preset knoppen */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {timerPresets.map(min => (
-            <button
-              key={min}
-              onClick={() => setTimer(min)}
-              className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition-smooth hover:border-accent hover:text-accent ${
-                totalSeconds === min * 60 && !done
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card"
-              }`}
-            >
-              {min} min
-            </button>
-          ))}
-        </div>
+        {/* Preset knoppen — alleen zichtbaar als timer niet loopt */}
+        {!running && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {timerPresets.map(min => (
+              <button
+                key={min}
+                onClick={() => setTimer(min)}
+                className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition-smooth hover:border-accent hover:text-accent ${
+                  totalSeconds === min * 60 && !done
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card"
+                }`}
+              >
+                {min} min
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Knoppen */}
         <div className="flex gap-3">
-          <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Minus className="h-4 w-4" /></button>
-          <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Plus className="h-4 w-4" /></button>
+          {!running && <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Minus className="h-4 w-4" /></button>}
+          {!running && <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2.5 transition-smooth hover:border-accent hover:text-accent"><Plus className="h-4 w-4" /></button>}
           <button
             onClick={() => setRunning(r => !r)}
             className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
@@ -144,7 +146,7 @@ const Tekstbord = () => {
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder="Schrijf hier een opdracht, vraag of mededeling voor de klas…"
-        className="min-h-36 max-h-[60vh] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-accent"
+        className="min-h-36 max-h-[60vh] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background p-4 text-lg outline-none focus:border-accent"
       />
     </div>
   );
@@ -155,8 +157,8 @@ const Tekstbord = () => {
 type Light = "rood" | "oranje" | "groen";
 
 const lights: { color: Light; label: string; bg: string; glow: string }[] = [
-  { color: "rood",   label: "Je werkt stil. Even geen vragen aan de meester.",             bg: "#ef4444", glow: "0 0 40px 10px #ef444488" },
-  { color: "oranje", label: "Je werkt stil. Stel je vraag alleen aan de meester.",         bg: "#f97316", glow: "0 0 40px 10px #f9731688" },
+  { color: "rood",   label: "Je werkt stil en zelfstandig, zonder vragen te stellen.",     bg: "#ef4444", glow: "0 0 40px 10px #ef444488" },
+  { color: "oranje", label: "Je werkt stil. Je steekt je vinger op voor een vraag aan de meester.", bg: "#f97316", glow: "0 0 40px 10px #f9731688" },
   { color: "groen",  label: "Met een fluisterstem samenwerken met schoudermaatje.", bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
 ];
 
