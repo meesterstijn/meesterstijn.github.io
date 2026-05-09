@@ -21,7 +21,7 @@ const fetchData = async (): Promise<{ leerlingen: string[]; assignments: Assignm
 };
 
 const patch = async (body: object) =>
-  supabase.from("taakjes").update(body).eq("id", 1);
+  supabase.from("taakjes").upsert({ id: 1, ...body });
 
 type Taak = { id: string; emoji: string; naam: string; desc: string };
 

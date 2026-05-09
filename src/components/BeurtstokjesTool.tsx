@@ -10,8 +10,20 @@ const fetchLeerlingen = async (): Promise<string[]> => {
   } catch { return []; }
 };
 
-const saveLeerlingen = (namen: string[]) =>
-  supabase.from("taakjes").update({ leerlingen: namen }).eq("id", 1);
+const saveLeerlingen = async (namen: string[]) => {
+  const { data, error } = await supabase
+    .from("taakjes")
+    .update({ leerlingen: namen })
+    .eq("id", 1)
+    .select("id");
+  if (error) { console.error("Beurtstokjes update error:", error); return; }
+  if (data && data.length === 0) {
+    const { error: ie } = await supabase
+      .from("taakjes")
+      .insert({ id: 1, leerlingen: namen, assignments: {} });
+    if (ie) console.error("Beurtstokjes insert error:", ie);
+  }
+};
 
 const BeurtstokjesTool = ({ onClose }: { onClose: () => void }) => {
   const [leerlingen, setLeerlingen] = useState<string[]>([]);
@@ -53,19 +65,19 @@ const BeurtstokjesTool = ({ onClose }: { onClose: () => void }) => {
     volgende();
   };
 
-  const voegToe = () => {
+  const voegToe = async () => {
     const naam = nieuw.trim();
     if (!naam || leerlingen.includes(naam)) return;
     const nieuweLijst = [...leerlingen, naam].sort((a, b) => a.localeCompare(b, "nl"));
     setLeerlingen(nieuweLijst);
-    saveLeerlingen(nieuweLijst);
     setNieuw("");
+    await saveLeerlingen(nieuweLijst);
   };
 
-  const verwijder = (naam: string) => {
+  const verwijder = async (naam: string) => {
     const nieuweLijst = leerlingen.filter(l => l !== naam);
     setLeerlingen(nieuweLijst);
-    saveLeerlingen(nieuweLijst);
+    await saveLeerlingen(nieuweLijst);
   };
 
   return (
@@ -141,7 +153,7 @@ const BeurtstokjesTool = ({ onClose }: { onClose: () => void }) => {
                 </p>
                 {leerlingen.length > 0 && (
                   <button
-                    onClick={() => { setLeerlingen([]); saveLeerlingen([]); }}
+                    onClick={() => { setLeerlingen([]); saveLeerlingen([]); /* fire-and-forget */ }}
                     className="text-xs text-muted-foreground hover:text-destructive transition-smooth"
                   >
                     Alles verwijderen
