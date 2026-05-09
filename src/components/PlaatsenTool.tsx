@@ -42,14 +42,21 @@ async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } 
   return null;
 }
 
-async function saveToSupabase(lokaal: Lokaal, tafels: Tafel[]) {
+async function saveToSupabase(lokaal: Lokaal, tafels: Tafel[]): Promise<string | null> {
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/plaatsen`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/plaatsen`, {
       method: "POST",
       headers: { ...H, Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify({ id: 1, lokaal, tafels }),
     });
-  } catch {}
+    if (!res.ok) {
+      const body = await res.text();
+      return `HTTP ${res.status}: ${body}`;
+    }
+    return null;
+  } catch (e) {
+    return String(e);
+  }
 }
 
 const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
@@ -61,7 +68,8 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   const [diepte, setDiepte] = useState("7");
   const [bord, setBord] = useState("4");
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const lokaalRef = useRef(lokaal);
@@ -92,8 +100,9 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     if (loading) return;
     setSaveStatus("saving");
     const timer = setTimeout(async () => {
-      await saveToSupabase(lokaal, tafels);
-      setSaveStatus("saved");
+      const err = await saveToSupabase(lokaal, tafels);
+      if (err) { setSaveError(err); setSaveStatus("error"); }
+      else { setSaveError(null); setSaveStatus("saved"); }
     }, 1200);
     return () => clearTimeout(timer);
   }, [lokaal, tafels, loading]);
@@ -262,9 +271,12 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Klaslokaal</p>
               <h2 className="font-display text-xl font-semibold">Plaatsen</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {saveStatus === "saving" ? "Opslaan…" : "✓ Opgeslagen"}
+              <p className={`mt-0.5 text-xs ${saveStatus === "error" ? "text-red-500" : "text-muted-foreground"}`}>
+                {saveStatus === "saving" ? "Opslaan…" : saveStatus === "error" ? `⚠ Opslaan mislukt` : "✓ Opgeslagen"}
               </p>
+              {saveStatus === "error" && saveError && (
+                <p className="mt-1 text-[10px] text-red-400 leading-snug break-all">{saveError}</p>
+              )}
             </div>
             <button onClick={onClose} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent">
               <X className="h-4 w-4" />
