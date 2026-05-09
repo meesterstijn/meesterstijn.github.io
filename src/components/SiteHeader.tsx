@@ -1,11 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Cloud } from "lucide-react";
 
 const links = [
   { to: "/", label: "Start" },
   { to: "/planning", label: "Planning" },
-  { to: "/bestanden", label: "Bestanden" },
-  { to: "/weer", label: "🌤️ Weer" },
+  { to: "/dagritme", label: "Dagritme" },
+  { to: "/weer", label: "Weer", icon: Cloud },
 ];
 
 export const SiteHeader = () => {
@@ -34,7 +34,7 @@ export const SiteHeader = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {l.label}
+                {l.icon ? <span className="flex items-center gap-1.5"><l.icon className="h-3.5 w-3.5" />{l.label}</span> : l.label}
               </Link>
             );
           })}

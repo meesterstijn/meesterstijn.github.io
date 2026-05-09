@@ -47,6 +47,9 @@ const isoWeek = (date: Date): number => {
 const fmt = (d: Date) =>
   `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 
+const MONTHS = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+const fmtLong = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+
 const defaultWeek: Day[] = DAYS.map((day, i) => ({
   day,
   blocks: [
@@ -213,7 +216,17 @@ const Dagritme = () => {
         <div className="mb-10 animate-fade-up flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-4xl font-semibold md:text-5xl">
-              {view === "dag" ? DAYS[dayIdx] : "Weekoverzicht"}
+              {view === "dag" ? (
+                <span className="flex items-baseline gap-3">
+                  {DAYS[dayIdx]}
+                  <span className="text-4xl font-normal text-muted-foreground md:text-5xl">{fmtLong(weekDates[dayIdx])}</span>
+                </span>
+              ) : (
+                <span className="flex items-baseline gap-3">
+                  Weekoverzicht
+                  <span className="text-2xl font-normal text-muted-foreground md:text-3xl">Week {isoWeek(weekDates[0])}</span>
+                </span>
+              )}
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -401,7 +414,7 @@ const Dagritme = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{b.time}</span>
-                            <p className="text-sm font-medium leading-tight">{b.title}</p>
+                            <p className="text-sm font-medium leading-tight text-foreground">{b.title}</p>
                           </div>
                           {b.subject && <p className="mt-0.5 text-xs text-muted-foreground">{b.subject}</p>}
                         </div>
@@ -495,7 +508,7 @@ const Dagritme = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{b.time}</span>
-                            <p className="text-sm font-medium leading-tight">{b.title}</p>
+                            <p className="text-sm font-medium leading-tight text-foreground">{b.title}</p>
                           </div>
                           {b.subject && <p className="mt-0.5 text-xs text-muted-foreground">{b.subject}</p>}
                         </div>
