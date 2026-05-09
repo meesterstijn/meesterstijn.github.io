@@ -390,12 +390,6 @@ const Dagritme = () => {
 
             {/* Dag-inhoud */}
             <div className="flex-1 min-w-0">
-              {/* Kolomkoppen */}
-              <div className="mb-2 grid grid-cols-10 gap-3 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <div className="col-span-3">Blok</div>
-                <div className="col-span-2">Les</div>
-                <div className="col-span-5">Lesdoelen</div>
-              </div>
 
               <div className="space-y-2">
                 {week[dayIdx].blocks.map(b => (
