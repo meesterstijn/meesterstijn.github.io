@@ -210,13 +210,13 @@ const Dagritme = () => {
       <main className="container py-10 md:py-14">
 
         {/* Header */}
-        <div className="mb-10 animate-fade-up flex items-start justify-between">
+        <div className="mb-10 animate-fade-up flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-4xl font-semibold md:text-5xl">
               {view === "dag" ? DAYS[dayIdx] : "Weekoverzicht"}
             </h1>
           </div>
-          <div className="mt-4 flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {saving && <span className="text-xs text-muted-foreground">Opslaan…</span>}
             <button
               onClick={() => setView(v => v === "dag" ? "week" : "dag")}
