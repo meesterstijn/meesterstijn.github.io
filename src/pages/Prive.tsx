@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Plus, Check, X, Search, Play, Pause, RotateCcw, ExternalLink } from "lucide-react";
+import { Plus, Check, X, Search, Play, Pause, RotateCcw, ExternalLink, Lock } from "lucide-react";
+
+const PRIVE_WW  = "nietvoorleerlingen";
+const PRIVE_KEY = "prive_ok";
 
 // ── CSS ────────────────────────────────────────────────────────────────────────
 const STYLES = `
@@ -344,8 +347,58 @@ const Pomodoro = () => {
   );
 };
 
+// ── Lock screen ────────────────────────────────────────────────────────────────
+const LockScreen = ({ onUnlock }: { onUnlock: () => void }) => {
+  const [ww, setWw]     = useState("");
+  const [fout, setFout] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+
+  const probeer = () => {
+    if (ww === PRIVE_WW) {
+      sessionStorage.setItem(PRIVE_KEY, "1");
+      onUnlock();
+    } else {
+      setFout(true);
+      setWw("");
+      setTimeout(() => setFout(false), 1400);
+    }
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#08080f", display:"flex", alignItems:"center", justifyContent:"center", color:"#e8e6ff" }}>
+      <style>{STYLES}</style>
+      <div className="blob" style={{ width:500, height:500, background:"#7c6af7", top:-150, left:-100, animationDuration:"25s" }}/>
+      <div className="blob" style={{ width:400, height:400, background:"#4f46e5", bottom:-100, right:-100, animationDuration:"30s", animationDelay:"-8s" }}/>
+      <div className="pv-card" style={{ padding:"40px 44px", maxWidth:380, width:"100%", textAlign:"center", position:"relative", zIndex:1 }}>
+        <div style={{ width:52, height:52, borderRadius:16, background:"linear-gradient(135deg,#7c6af7,#a78bfa)", display:"grid", placeItems:"center", margin:"0 auto 20px" }}>
+          <Lock style={{ width:22, height:22, color:"#fff" }}/>
+        </div>
+        <h2 style={{ fontWeight:700, fontSize:20, marginBottom:6, letterSpacing:"-0.02em" }}>Privé dashboard</h2>
+        <p style={{ fontSize:13, color:"rgba(255,255,255,0.38)", marginBottom:24 }}>Voer het wachtwoord in om verder te gaan.</p>
+        <input
+          ref={ref}
+          type="password"
+          value={ww}
+          className="pv-input"
+          style={{ textAlign:"center", marginBottom:12, borderColor: fout ? "rgba(239,68,68,0.6)" : undefined }}
+          placeholder="Wachtwoord…"
+          onChange={e => setWw(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && probeer()}
+        />
+        {fout && <p style={{ fontSize:12, color:"#f87171", marginBottom:10 }}>Onjuist wachtwoord</p>}
+        <button className="pv-btn" style={{ width:"100%", justifyContent:"center" }} onClick={probeer}>
+          Ontgrendelen
+        </button>
+        <Link to="/" style={{ display:"block", marginTop:18, fontSize:12, color:"rgba(255,255,255,0.28)", textDecoration:"none" }}>← Terug naar Meester Stijn</Link>
+      </div>
+    </div>
+  );
+};
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 const Prive = () => {
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(PRIVE_KEY) === "1");
   const [tijd, setTijd]         = useState(new Date());
   const [weer, setWeer]         = useState<any>(null);
   const [todos, setTodos]       = useState<Todo[]>([]);
@@ -445,6 +498,8 @@ const Prive = () => {
     if(t<5) return `🧥 Trek iets warms aan — ${t}°C`;
     return `${WEER_ICON(c)} ${t}°C · ${WEER_NL(c)}`;
   };
+
+  if (!unlocked) return <LockScreen onUnlock={() => setUnlocked(true)} />;
 
   return (
     <div style={{ minHeight:"100vh", background:"#08080f", position:"relative", overflow:"hidden", color:"#e8e6ff" }}>
