@@ -190,21 +190,23 @@ const Focus = () => {
               </button>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-3">
-              {presets.map(min => (
-                <button
-                  key={min}
-                  onClick={() => setTimer(min)}
-                  className={`rounded-2xl border px-5 py-2.5 text-sm font-semibold transition-smooth hover:border-accent hover:text-accent ${
-                    totalSeconds === min * 60 && !done
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card"
-                  }`}
-                >
-                  {min} min
-                </button>
-              ))}
-            </div>
+            {!running && (
+              <div className="flex flex-wrap justify-center gap-3">
+                {presets.map(min => (
+                  <button
+                    key={min}
+                    onClick={() => setTimer(min)}
+                    className={`rounded-2xl border px-5 py-2.5 text-sm font-semibold transition-smooth hover:border-accent hover:text-accent ${
+                      totalSeconds === min * 60 && !done
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    {min} min
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Plant panel */}
