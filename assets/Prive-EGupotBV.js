@@ -1,4 +1,4 @@
-import{j as e}from"./vendor-query-D1vOaZhx.js";import{r as o,L as O}from"./vendor-react-BuzZ45xS.js";import{s as v}from"./index-CA5RmAnC.js";import{S as L,k as W,i as U,X as P,a0 as Z,q as Q,r as X,s as ee}from"./vendor-ui-D_wfokFW.js";import"./vendor-supabase-CMSt9Qx4.js";const te=`
+import{j as e}from"./vendor-query-D1vOaZhx.js";import{r as o,L as O}from"./vendor-react-BuzZ45xS.js";import{s as v}from"./index-XZJ4K2QC.js";import{S as L,k as W,i as U,X as P,a0 as Z,q as Q,r as X,s as ee}from"./vendor-ui-D_wfokFW.js";import"./vendor-supabase-CMSt9Qx4.js";const te=`
   @keyframes blob {
     0%   { transform: translate(0,0) scale(1); }
     33%  { transform: translate(40px,-30px) scale(1.08); }
