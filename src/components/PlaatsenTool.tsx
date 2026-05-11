@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
-import { X, Plus, RotateCw, Trash2 } from "lucide-react";
+import { X, Plus, RotateCw, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
 
@@ -13,7 +13,6 @@ const DESK_SNAP = 0.15;
 type Rotation = 0 | 90 | 180 | 270;
 type Tafel = { id: string; x: number; y: number; w: number; h: number; rotation: Rotation; naam: string };
 
-// Effective layout dimensions after applying rotation
 const eff = (t: Tafel) => (t.rotation === 0 || t.rotation === 180) ? { w: t.w, h: t.h } : { w: t.h, h: t.w };
 type Wand = "boven" | "onder" | "links" | "rechts";
 type Lokaal = { breedte: number; diepte: number; bord: number; bordWand: Wand };
@@ -24,6 +23,8 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 const DEFAULT_LOKAAL: Lokaal = { breedte: 9, diepte: 7, bord: 4, bordWand: "boven" };
+
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
 
 async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } | null> {
   try {
@@ -48,9 +49,68 @@ async function saveToSupabase(lokaal: Lokaal, tafels: Tafel[]): Promise<string |
   }
 }
 
+const fetchLeerlingen = async (): Promise<string[]> => {
+  try {
+    const { data } = await supabase.from("taakjes").select("leerlingen").eq("id", 1).single();
+    return data?.leerlingen ?? [];
+  } catch { return []; }
+};
+
+// ─── Default layout generator ─────────────────────────────────────────────────
+
+const buildDefaultLayout = (leerlingen: string[], lokaal: Lokaal): Tafel[] => {
+  // Bureau meester — vooraan rechts
+  const meester: Tafel = {
+    id: uid(),
+    x: snapTo(clamp(lokaal.breedte - 1.45, 0, lokaal.breedte - 1.2)),
+    y: snapTo(0.3),
+    w: 1.2,
+    h: 0.6,
+    rotation: 0 as Rotation,
+    naam: "Meester",
+  };
+
+  const n = leerlingen.length;
+  if (n === 0) return [meester];
+
+  const marginTop = 1.5;   // ruimte voor bord/leraar
+  const gapX = 0.30;       // ruimte tussen kolommen
+  const gapY = 0.55;       // ruimte tussen rijen (boven stoel)
+
+  const slotW = DESK_W + gapX;
+  const slotH = DESK_H + CHAIR_H + gapY;
+
+  // Hoeveel kolommen passen er horizontaal (met 0.5m marge aan elke kant)
+  const maxCols = Math.max(1, Math.floor((lokaal.breedte - 1.0 + gapX) / slotW));
+  const cols = Math.min(maxCols, n);
+
+  // Centreer horizontaal
+  const totalW = cols * slotW - gapX;
+  const startX = (lokaal.breedte - totalW) / 2;
+
+  const leerlingTafels = leerlingen.map((naam, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return {
+      id: uid(),
+      x: snapTo(clamp(startX + col * slotW, 0, lokaal.breedte - DESK_W)),
+      y: snapTo(clamp(marginTop + row * slotH, 0, lokaal.diepte - DESK_H - CHAIR_H)),
+      w: DESK_W,
+      h: DESK_H,
+      rotation: 0 as Rotation,
+      naam,
+    };
+  });
+
+  return [meester, ...leerlingTafels];
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   const [tafels, setTafels] = useState<Tafel[]>([]);
   const [lokaal, setLokaal] = useState<Lokaal>(DEFAULT_LOKAAL);
+  const [leerlingen, setLeerlingen] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [svgSize, setSvgSize] = useState({ w: 0, h: 0 });
   const [breedte, setBreedte] = useState("9");
@@ -70,11 +130,14 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   useEffect(() => { lokaalRef.current = lokaal; }, [lokaal]);
   useEffect(() => { tabelsRef.current = tafels; }, [tafels]);
 
-  // Load from Supabase on mount
+  // Laad plaatsen + leerlingenlijst tegelijk
   useEffect(() => {
-    fetchFromSupabase().then(data => {
+    Promise.all([fetchFromSupabase(), fetchLeerlingen()]).then(([data, ll]) => {
+      setLeerlingen(ll);
       const s = data ?? { lokaal: DEFAULT_LOKAAL, tafels: [] };
-      setTafels(s.tafels);
+      // Als er nog geen tafels zijn → automatisch opstelling maken op basis van leerlingen
+      const tafelsToLoad = s.tafels.length > 0 ? s.tafels : buildDefaultLayout(ll, s.lokaal);
+      setTafels(tafelsToLoad);
       setLokaal(s.lokaal);
       setBreedte(String(s.lokaal.breedte));
       setDiepte(String(s.lokaal.diepte));
@@ -83,7 +146,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     });
   }, []);
 
-  // Debounced save to Supabase on every change (skip first render)
+  // Debounced save
   useEffect(() => {
     if (initialLoad.current) { initialLoad.current = false; return; }
     if (loading) return;
@@ -195,6 +258,13 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     setSelectedId(newTafel.id);
   };
 
+  const resetNaarLeerlingen = () => {
+    if (tafels.length === 0 || window.confirm("Dit vervangt de huidige opstelling met de leerlingenlijst. Doorgaan?")) {
+      setTafels(buildDefaultLayout(leerlingen, lokaalRef.current));
+      setSelectedId(null);
+    }
+  };
+
   const rotateTafel = (id: string) => {
     setTafels(prev => prev.map(t => {
       if (t.id !== id) return t;
@@ -239,7 +309,6 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
 
   const roomW = lokaal.breedte * scale;
   const roomH = lokaal.diepte * scale;
-  // Center the room in the canvas
   const offsetX = Math.max(PAD, (svgSize.w - roomW) / 2);
   const offsetY = Math.max(PAD, (svgSize.h - roomH) / 2);
   const toX = (m: number) => offsetX + m * scale;
@@ -254,14 +323,13 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
     <div className="fixed inset-0 z-50 flex overflow-hidden" style={{ background: "hsl(334 10% 97%)" }}>
       {/* Sidebar */}
       <aside className="flex w-72 shrink-0 flex-col border-r border-border bg-card">
-        {/* Scrollable content */}
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Klaslokaal</p>
               <h2 className="font-display text-xl font-semibold">Plaatsen</h2>
               <p className={`mt-0.5 text-xs ${saveStatus === "error" ? "text-red-500" : "text-muted-foreground"}`}>
-                {saveStatus === "saving" ? "Opslaan…" : saveStatus === "error" ? `⚠ Opslaan mislukt` : "✓ Opgeslagen"}
+                {saveStatus === "saving" ? "Opslaan…" : saveStatus === "error" ? "⚠ Opslaan mislukt" : "✓ Opgeslagen"}
               </p>
               {saveStatus === "error" && saveError && (
                 <p className="mt-1 text-[10px] text-red-400 leading-snug break-all">{saveError}</p>
@@ -271,6 +339,15 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
               <X className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Leerlingen info */}
+          {leerlingen.length > 0 && (
+            <div className="rounded-2xl border border-border bg-background/60 px-4 py-3">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{leerlingen.length} leerlingen</span> uit de lijst
+              </p>
+            </div>
+          )}
 
           <section className="rounded-2xl border border-border bg-background/60 p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Afmetingen lokaal</p>
@@ -338,8 +415,18 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
             className="flex items-center gap-2 rounded-2xl border border-border bg-background/60 p-4 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5"
           >
             <Plus className="h-4 w-4 text-accent" />
-            Tafel toevoegen
+            Losse tafel toevoegen
           </button>
+
+          {leerlingen.length > 0 && (
+            <button
+              onClick={resetNaarLeerlingen}
+              className="flex items-center gap-2 rounded-2xl border border-accent/40 bg-accent/5 p-4 text-sm font-semibold text-accent transition-smooth hover:border-accent hover:bg-accent/10"
+            >
+              <Users className="h-4 w-4" />
+              Opstelling met leerlingenlijst
+            </button>
+          )}
 
           {selectedTafel && (
             <section className="rounded-2xl border border-border bg-background/60 p-4">
@@ -402,7 +489,7 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
           )}
         </div>
 
-        {/* Fixed bottom: rotate all + delete all */}
+        {/* Vaste onderkant */}
         <div className="shrink-0 border-t border-border p-4 flex flex-col gap-2">
           <button
             onClick={rotateAll}
@@ -430,147 +517,139 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
             <p className="text-muted-foreground">Indeling laden…</p>
           </div>
         )}
-        {!loading && svgSize.w > 0 && <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
-          <defs>
-            <clipPath id="plaatsen-room-clip">
-              <rect x={offsetX} y={offsetY} width={roomW} height={roomH} />
-            </clipPath>
-          </defs>
+        {!loading && svgSize.w > 0 && (
+          <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
+            <defs>
+              <clipPath id="plaatsen-room-clip">
+                <rect x={offsetX} y={offsetY} width={roomW} height={roomH} />
+              </clipPath>
+            </defs>
 
-          {/* Room floor */}
-          <rect x={offsetX} y={offsetY} width={roomW} height={roomH} fill="white" />
+            <rect x={offsetX} y={offsetY} width={roomW} height={roomH} fill="white" />
 
-          {/* Grid */}
-          <g clipPath="url(#plaatsen-room-clip)">
-            {vLines.map(x => (
-              <line
-                key={`v${x}`}
-                x1={toX(x)} y1={offsetY}
-                x2={toX(x)} y2={offsetY + roomH}
-                stroke={x % 1 === 0 ? "#d1d5db" : "#e5e7eb"}
-                strokeWidth={x % 1 === 0 ? 1 : 0.5}
-              />
-            ))}
-            {hLines.map(y => (
-              <line
-                key={`h${y}`}
-                x1={offsetX} y1={toY(y)}
-                x2={offsetX + roomW} y2={toY(y)}
-                stroke={y % 1 === 0 ? "#d1d5db" : "#e5e7eb"}
-                strokeWidth={y % 1 === 0 ? 1 : 0.5}
-              />
-            ))}
-          </g>
+            <g clipPath="url(#plaatsen-room-clip)">
+              {vLines.map(x => (
+                <line
+                  key={`v${x}`}
+                  x1={toX(x)} y1={offsetY}
+                  x2={toX(x)} y2={offsetY + roomH}
+                  stroke={x % 1 === 0 ? "#d1d5db" : "#e5e7eb"}
+                  strokeWidth={x % 1 === 0 ? 1 : 0.5}
+                />
+              ))}
+              {hLines.map(y => (
+                <line
+                  key={`h${y}`}
+                  x1={offsetX} y1={toY(y)}
+                  x2={offsetX + roomW} y2={toY(y)}
+                  stroke={y % 1 === 0 ? "#d1d5db" : "#e5e7eb"}
+                  strokeWidth={y % 1 === 0 ? 1 : 0.5}
+                />
+              ))}
+            </g>
 
-          {/* Bord */}
-          {(() => {
-            const wand = lokaal.bordWand;
-            const len = lokaal.bord * scale;
-            const dikte = 7;
-            const horizontal = wand === "boven" || wand === "onder";
-            const bx = horizontal
-              ? toX((lokaal.breedte - lokaal.bord) / 2)
-              : wand === "links" ? offsetX + 4 : offsetX + roomW - 4 - dikte;
-            const by = horizontal
-              ? wand === "boven" ? offsetY + 4 : offsetY + roomH - 4 - dikte
-              : toY((lokaal.diepte - lokaal.bord) / 2);
-            const bw = horizontal ? len : dikte;
-            const bh = horizontal ? dikte : len;
-            const lx = horizontal ? toX(lokaal.breedte / 2) : wand === "links" ? offsetX + 18 : offsetX + roomW - 18;
-            const ly = horizontal ? by + (wand === "boven" ? 20 : -8) : toY(lokaal.diepte / 2);
-            const rot = horizontal ? 0 : -90;
-            return (
-              <>
-                <rect x={bx} y={by} width={bw} height={bh} rx={2} fill="#374151" clipPath="url(#plaatsen-room-clip)" />
-                <text
-                  x={lx} y={ly}
-                  textAnchor="middle"
-                  fontSize={9}
-                  fill="#6b7280"
-                  transform={rot ? `rotate(${rot},${lx},${ly})` : undefined}
-                  clipPath="url(#plaatsen-room-clip)"
-                >
-                  bord ({lokaal.bord}m)
-                </text>
-              </>
-            );
-          })()}
-
-          {/* Room border */}
-          <rect x={offsetX} y={offsetY} width={roomW} height={roomH} fill="none" stroke="#6b7280" strokeWidth={2} />
-
-          {/* Axis labels */}
-          {Array.from({ length: Math.floor(lokaal.breedte) + 1 }, (_, i) => i).map(m => (
-            <text key={`xl${m}`} x={toX(m)} y={offsetY - 10} textAnchor="middle" fontSize={10} fill="#9ca3af">
-              {m}m
-            </text>
-          ))}
-          {Array.from({ length: Math.floor(lokaal.diepte) + 1 }, (_, i) => i).map(m => (
-            <text key={`yl${m}`} x={offsetX - 7} y={toY(m) + 4} textAnchor="end" fontSize={10} fill="#9ca3af">
-              {m}m
-            </text>
-          ))}
-
-          {/* Desks */}
-          <g clipPath="url(#plaatsen-room-clip)">
-            {tafels.map(t => {
-              const { w: ew, h: eh } = eff(t);
-              const sx = toX(t.x);
-              const sy = toY(t.y);
-              const sw = ew * scale;
-              const sh = eh * scale;
-              const isSelected = selectedId === t.id;
-              const cs = CHAIR_H * scale; // chair size
-              const cx = sx + sw / 2;
-              const cy = sy + sh / 2;
-              const fontSize = Math.max(8, Math.min(12, Math.min(sw, sh) / 3.5));
-
-              // Chair rect coords per rotation
-              const chairProps = (() => {
-                const gap = 3;
-                if (t.rotation === 0)   return { x: sx + sw * 0.15, y: sy + sh + gap, width: sw * 0.7, height: cs };
-                if (t.rotation === 90)  return { x: sx + sw + gap,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
-                if (t.rotation === 180) return { x: sx + sw * 0.15, y: sy - gap - cs,  width: sw * 0.7, height: cs };
-                return                         { x: sx - gap - cs,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
-              })();
-
+            {/* Bord */}
+            {(() => {
+              const wand = lokaal.bordWand;
+              const len = lokaal.bord * scale;
+              const dikte = 7;
+              const horizontal = wand === "boven" || wand === "onder";
+              const bx = horizontal
+                ? toX((lokaal.breedte - lokaal.bord) / 2)
+                : wand === "links" ? offsetX + 4 : offsetX + roomW - 4 - dikte;
+              const by = horizontal
+                ? wand === "boven" ? offsetY + 4 : offsetY + roomH - 4 - dikte
+                : toY((lokaal.diepte - lokaal.bord) / 2);
+              const bw = horizontal ? len : dikte;
+              const bh = horizontal ? dikte : len;
+              const lx = horizontal ? toX(lokaal.breedte / 2) : wand === "links" ? offsetX + 18 : offsetX + roomW - 18;
+              const ly = horizontal ? by + (wand === "boven" ? 20 : -8) : toY(lokaal.diepte / 2);
+              const rot = horizontal ? 0 : -90;
               return (
-                <g
-                  key={t.id}
-                  style={{ cursor: "grab" }}
-                  onMouseDown={e => startDrag(e, t.id)}
-                  onTouchStart={e => startDrag(e, t.id)}
-                  onClick={e => { e.stopPropagation(); setSelectedId(t.id); }}
-                >
-                  <rect
-                    {...chairProps}
-                    rx={3}
-                    fill={isSelected ? "#fcd34d" : "#bfdbfe"}
-                    opacity={0.85}
-                  />
-                  <rect
-                    x={sx} y={sy} width={sw} height={sh}
-                    rx={4}
-                    fill={isSelected ? "#fef3c7" : "#dbeafe"}
-                    stroke={isSelected ? "#f59e0b" : "#60a5fa"}
-                    strokeWidth={isSelected ? 2.5 : 1.5}
-                  />
-                  {t.naam && (
-                    <text
-                      x={cx} y={cy + fontSize * 0.35}
-                      textAnchor="middle"
-                      fontSize={fontSize}
-                      fontWeight="600"
-                      fill={isSelected ? "#92400e" : "#1d4ed8"}
-                    >
-                      {t.naam}
-                    </text>
-                  )}
-                </g>
+                <>
+                  <rect x={bx} y={by} width={bw} height={bh} rx={2} fill="#374151" clipPath="url(#plaatsen-room-clip)" />
+                  <text
+                    x={lx} y={ly}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fill="#6b7280"
+                    transform={rot ? `rotate(${rot},${lx},${ly})` : undefined}
+                    clipPath="url(#plaatsen-room-clip)"
+                  >
+                    bord ({lokaal.bord}m)
+                  </text>
+                </>
               );
-            })}
-          </g>
-        </svg>}
+            })()}
+
+            <rect x={offsetX} y={offsetY} width={roomW} height={roomH} fill="none" stroke="#6b7280" strokeWidth={2} />
+
+            {Array.from({ length: Math.floor(lokaal.breedte) + 1 }, (_, i) => i).map(m => (
+              <text key={`xl${m}`} x={toX(m)} y={offsetY - 10} textAnchor="middle" fontSize={10} fill="#9ca3af">
+                {m}m
+              </text>
+            ))}
+            {Array.from({ length: Math.floor(lokaal.diepte) + 1 }, (_, i) => i).map(m => (
+              <text key={`yl${m}`} x={offsetX - 7} y={toY(m) + 4} textAnchor="end" fontSize={10} fill="#9ca3af">
+                {m}m
+              </text>
+            ))}
+
+            {/* Tafels */}
+            <g clipPath="url(#plaatsen-room-clip)">
+              {tafels.map(t => {
+                const { w: ew, h: eh } = eff(t);
+                const sx = toX(t.x);
+                const sy = toY(t.y);
+                const sw = ew * scale;
+                const sh = eh * scale;
+                const isSelected = selectedId === t.id;
+                const cs = CHAIR_H * scale;
+                const cx = sx + sw / 2;
+                const cy = sy + sh / 2;
+                const fontSize = Math.max(8, Math.min(12, Math.min(sw, sh) / 3.5));
+
+                const chairProps = (() => {
+                  const gap = 3;
+                  if (t.rotation === 0)   return { x: sx + sw * 0.15, y: sy + sh + gap, width: sw * 0.7, height: cs };
+                  if (t.rotation === 90)  return { x: sx + sw + gap,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
+                  if (t.rotation === 180) return { x: sx + sw * 0.15, y: sy - gap - cs,  width: sw * 0.7, height: cs };
+                  return                         { x: sx - gap - cs,   y: sy + sh * 0.15, width: cs, height: sh * 0.7 };
+                })();
+
+                return (
+                  <g
+                    key={t.id}
+                    style={{ cursor: "grab" }}
+                    onMouseDown={e => startDrag(e, t.id)}
+                    onTouchStart={e => startDrag(e, t.id)}
+                    onClick={e => { e.stopPropagation(); setSelectedId(t.id); }}
+                  >
+                    <rect {...chairProps} rx={3} fill={isSelected ? "#fcd34d" : "#bfdbfe"} opacity={0.85} />
+                    <rect
+                      x={sx} y={sy} width={sw} height={sh}
+                      rx={4}
+                      fill={isSelected ? "#fef3c7" : "#dbeafe"}
+                      stroke={isSelected ? "#f59e0b" : "#60a5fa"}
+                      strokeWidth={isSelected ? 2.5 : 1.5}
+                    />
+                    {t.naam && (
+                      <text
+                        x={cx} y={cy + fontSize * 0.35}
+                        textAnchor="middle"
+                        fontSize={fontSize}
+                        fontWeight="600"
+                        fill={isSelected ? "#92400e" : "#1d4ed8"}
+                      >
+                        {t.naam}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+        )}
       </div>
     </div>
   );

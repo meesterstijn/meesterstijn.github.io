@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Sprout } from "lucide-react";
+import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Sprout, Hand } from "lucide-react";
 import { StoplichtWidget } from "@/components/StoplichtWidget";
 import { TekstbordWidget } from "@/components/TekstbordWidget";
 import { supabase } from "@/lib/supabase";
@@ -158,6 +158,71 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
 
 // ─── TEKSTBORD ───────────────────────────────────────────────────────────────
 
+// ─── BEURTSTOKJES INLINE ─────────────────────────────────────────────────────
+
+const BeurtstokjesInline = () => {
+  const [leerlingen, setLeerlingen] = useState<string[]>([]);
+  const [display, setDisplay]       = useState<string>("");
+  const [gekozen, setGekozen]       = useState<string | null>(null);
+  const [draaien, setDraaien]       = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    supabase.from("taakjes").select("leerlingen").eq("id", 1).single()
+      .then(({ data }) => setLeerlingen(data?.leerlingen ?? []));
+  }, []);
+
+  const trek = () => {
+    if (draaien || leerlingen.length === 0) return;
+    setGekozen(null);
+    setDraaien(true);
+    const winnaar = leerlingen[Math.floor(Math.random() * leerlingen.length)];
+    const pool = leerlingen.length > 1 ? leerlingen : [winnaar];
+    let stap = 0;
+    const stapMax = 15;
+    const volgende = () => {
+      stap++;
+      setDisplay(pool[Math.floor(Math.random() * pool.length)]);
+      if (stap < stapMax) {
+        timerRef.current = setTimeout(volgende, 30 + Math.pow(stap / stapMax, 2) * 100);
+      } else {
+        setDisplay(winnaar);
+        setGekozen(winnaar);
+        setDraaien(false);
+      }
+    };
+    volgende();
+  };
+
+  return (
+    <div className="w-full border-t border-border pt-4 flex flex-col items-center gap-3">
+      <div className="flex h-16 w-full items-center justify-center rounded-2xl border border-border bg-background">
+        {leerlingen.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center px-3">Voeg leerlingen toe via Beurtstokjes.</p>
+        ) : (
+          <span
+            className="font-display font-bold text-center px-3 leading-tight"
+            style={{
+              fontSize: display.length > 14 ? "1.1rem" : display.length > 8 ? "1.4rem" : "1.8rem",
+              color: gekozen ? "hsl(var(--accent))" : "hsl(var(--foreground))",
+              transition: "color 0.4s",
+            }}
+          >
+            {display || "—"}
+          </span>
+        )}
+      </div>
+      <button
+        onClick={trek}
+        disabled={draaien || leerlingen.length === 0}
+        className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition-smooth hover:opacity-90 disabled:opacity-40"
+      >
+        {draaien ? "…" : "Trek!"}
+      </button>
+    </div>
+  );
+};
+
 // ─── PAGINA ───────────────────────────────────────────────────────────────────
 
 const SAVED_IMAGES = [
@@ -165,6 +230,7 @@ const SAVED_IMAGES = [
 ];
 
 const Klastools = () => {
+  const [showBeurtstokjes, setShowBeurtstokjes] = useState(false);
   const [showPlant, setShowPlant]         = useState(false);
   const [plantCount, setPlantCount]       = useState<number | null>(null);
   const [plantProgress, setPlantProgress] = useState(0);
@@ -269,7 +335,17 @@ const Klastools = () => {
             </div>
           )}
           <div className={`${showPlant ? "" : "md:col-span-2"} h-full`}><TekstbordWidget /></div>
-          <StoplichtWidget />
+          <StoplichtWidget footer={
+            <div className="w-full flex flex-col items-center gap-3 mt-2">
+              <button
+                onClick={() => setShowBeurtstokjes(v => !v)}
+                className={`flex items-center justify-center rounded-xl border px-5 py-2.5 transition-smooth hover:border-accent ${showBeurtstokjes ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+              >
+                <Hand className="h-4 w-4" />
+              </button>
+              {showBeurtstokjes && <BeurtstokjesInline />}
+            </div>
+          } />
         </div>
       </main>
 

@@ -8,7 +8,7 @@ const lights: { color: Light; label: string; bg: string; glow: string }[] = [
   { color: "groen",  label: "Met een fluisterstem samenwerken met schoudermaatje.",                  bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
 ];
 
-export const StoplichtWidget = () => {
+export const StoplichtWidget = ({ footer }: { footer?: React.ReactNode } = {}) => {
   const [active, setActive] = useState<Light | null>(null);
 
   return (
@@ -32,6 +32,7 @@ export const StoplichtWidget = () => {
           ? <p className="mt-2 text-center text-sm font-semibold">{lights.find(l => l.color === active)?.label}</p>
           : <p className="mt-2 text-center text-sm text-muted-foreground">Klik op een lamp</p>
         }
+        {footer}
       </div>
     </div>
   );
