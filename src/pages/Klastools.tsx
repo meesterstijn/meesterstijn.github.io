@@ -2,32 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Bold, Trash2, Sprout } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-
-// ─── PLANT ────────────────────────────────────────────────────────────────────
-
-const PlantSVG = ({ progress }: { progress: number }) => {
-  const gY = 140, stemLen = 108;
-  const p = Math.max(0, Math.min(1, progress));
-  const tip = gY - stemLen * p;
-  const lo = (t: number) => Math.max(0, Math.min(1, (p - t) / 0.1));
-  return (
-    <svg viewBox="0 0 100 170" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <ellipse cx="50" cy="154" rx="38" ry="11" fill="#c8a45a" opacity="0.45" />
-      <ellipse cx="50" cy="150" rx="33" ry="8"  fill="#a67c38" opacity="0.5" />
-      <ellipse cx="50" cy="147" rx="27" ry="5.5" fill="#8a6428" opacity="0.55" />
-      <ellipse cx="50" cy="143" rx="5" ry="3.5" fill="#7a5c2e" opacity={Math.max(0, 1 - p / 0.07)} />
-      {p > 0.03 && <line x1="50" y1={gY} x2="50" y2={tip} stroke="#4a7828" strokeWidth="3.5" strokeLinecap="round" />}
-      <g opacity={lo(0.28)} transform={`translate(50,${gY - stemLen * 0.31})`}><ellipse cx="-8" cy="0" rx="14" ry="5.5" fill="#6ab840" transform="rotate(-28)" /></g>
-      <g opacity={lo(0.47)} transform={`translate(50,${gY - stemLen * 0.51})`}><ellipse cx="8" cy="0" rx="13" ry="5" fill="#6ab840" transform="rotate(28)" /></g>
-      <g opacity={lo(0.65)} transform={`translate(50,${gY - stemLen * 0.69})`}><ellipse cx="-7" cy="0" rx="12" ry="4.5" fill="#58a034" transform="rotate(-33)" /></g>
-      <g opacity={lo(0.83)} transform={`translate(50,${gY - stemLen * 0.87})`}><ellipse cx="7" cy="0" rx="11" ry="4" fill="#58a034" transform="rotate(33)" /></g>
-      <g opacity={lo(0.92)} transform={`translate(50,${tip})`}>
-        {[0,60,120,180,240,300].map(a => <ellipse key={a} cx="0" cy="-7" rx="3.5" ry="5.5" fill="#f9a8d4" transform={`rotate(${a})`} />)}
-        <circle cx="0" cy="0" r="4.5" fill="#fbbf24" />
-      </g>
-    </svg>
-  );
-};
+import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
 
 const fetchPlantCount = async (): Promise<number> => {
   const { data } = await supabase.from("counters").select("value").eq("id", 1).single();
@@ -48,12 +23,13 @@ const timerPresets = [5, 10, 15, 20, 30];
 const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
   showPlant: boolean;
   onTogglePlant: () => void;
-  onStateChange: (progress: number, running: boolean, done: boolean) => void;
+  onStateChange: (progress: number, running: boolean, done: boolean, variant: PlantVariant) => void;
   onDone: () => void;
 }) => {
   const [totalSeconds, setTotalSeconds] = useState(5 * 60);
   const [seconds, setSeconds] = useState(5 * 60);
   const [running, setRunning] = useState(false);
+  const [variant, setVariant] = useState<PlantVariant>(randomVariant);
   const interval = useRef<ReturnType<typeof setInterval> | null>(null);
   const counted = useRef(false);
 
@@ -76,6 +52,7 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
     setRunning(false);
     setTotalSeconds(minutes * 60);
     setSeconds(minutes * 60);
+    setVariant(randomVariant());
   };
 
   const adjust = (delta: number) => {
@@ -90,7 +67,7 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
   const danger = seconds <= 60 && seconds > 0;
   const done = seconds === 0;
 
-  useEffect(() => { onStateChange(1 - pct, running, done); }, [seconds, running]);
+  useEffect(() => { onStateChange(1 - pct, running, done, variant); }, [seconds, running]);
 
   return (
     <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
@@ -309,18 +286,19 @@ const SAVED_IMAGES = [
 ];
 
 const Klastools = () => {
-  const [showPlant, setShowPlant]       = useState(false);
-  const [plantCount, setPlantCount]     = useState<number | null>(null);
+  const [showPlant, setShowPlant]         = useState(false);
+  const [plantCount, setPlantCount]       = useState<number | null>(null);
   const [plantProgress, setPlantProgress] = useState(0);
-  const [plantRunning, setPlantRunning] = useState(false);
-  const [plantDone, setPlantDone]       = useState(false);
+  const [plantRunning, setPlantRunning]   = useState(false);
+  const [plantDone, setPlantDone]         = useState(false);
+  const [plantVariant, setPlantVariant]   = useState<PlantVariant>(0);
   const [showFoto, setShowFoto] = useState(false);
 
   useEffect(() => { fetchPlantCount().then(setPlantCount); }, []);
 
   const handleDone = () => incrementPlantCount().then(setPlantCount);
-  const handleState = (progress: number, running: boolean, done: boolean) => {
-    setPlantProgress(progress); setPlantRunning(running); setPlantDone(done);
+  const handleState = (progress: number, running: boolean, done: boolean, variant: PlantVariant) => {
+    setPlantProgress(progress); setPlantRunning(running); setPlantDone(done); setPlantVariant(variant);
   };
   const [imageUrl, setImageUrl] = useState<string>(SAVED_IMAGES[0].src);
   const [wijzerAan, setWijzerAan] = useState(false);
@@ -399,7 +377,7 @@ const Klastools = () => {
                 {plantDone ? "Volgroeid! 🌸" : plantProgress < 0.01 ? "Zaadje 🌱" : "Groeit…"}
               </p>
               <div style={{ width: 120, height: 158 }}>
-                <PlantSVG progress={plantProgress} />
+                <PlantSVG progress={plantProgress} variant={plantVariant} />
               </div>
               <p className="text-center text-xs text-muted-foreground">
                 {plantDone ? "Prachtig! Goed gefocust." : plantRunning ? "Blijf gefocust!" : "Start de timer om te laten groeien."}

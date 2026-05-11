@@ -1,70 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Play, Pause, RotateCcw, Sprout } from "lucide-react";
+import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
 
 const presets = [5, 10, 15, 20, 30];
-
-// ─── Plant ────────────────────────────────────────────────────────────────────
-
-const PlantSVG = ({ progress }: { progress: number }) => {
-  const gY = 140;
-  const stemLen = 108;
-  const p = Math.max(0, Math.min(1, progress));
-  const tip = gY - stemLen * p;
-
-  const lo = (t: number) => Math.max(0, Math.min(1, (p - t) / 0.1));
-
-  return (
-    <svg viewBox="0 0 100 170" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Soil */}
-      <ellipse cx="50" cy="154" rx="38" ry="11" fill="#c8a45a" opacity="0.45" />
-      <ellipse cx="50" cy="150" rx="33" ry="8"  fill="#a67c38" opacity="0.5" />
-      <ellipse cx="50" cy="147" rx="27" ry="5.5" fill="#8a6428" opacity="0.55" />
-
-      {/* Seed */}
-      <ellipse
-        cx="50" cy="143" rx="5" ry="3.5"
-        fill="#7a5c2e"
-        opacity={Math.max(0, 1 - p / 0.07)}
-      />
-
-      {/* Stem */}
-      {p > 0.03 && (
-        <line x1="50" y1={gY} x2="50" y2={tip}
-          stroke="#4a7828" strokeWidth="3.5" strokeLinecap="round" />
-      )}
-
-      {/* Leaf 1 — lower left */}
-      <g opacity={lo(0.28)} transform={`translate(50,${gY - stemLen * 0.31})`}>
-        <ellipse cx="-8" cy="0" rx="14" ry="5.5" fill="#6ab840" transform="rotate(-28)" />
-      </g>
-
-      {/* Leaf 2 — lower right */}
-      <g opacity={lo(0.47)} transform={`translate(50,${gY - stemLen * 0.51})`}>
-        <ellipse cx="8" cy="0" rx="13" ry="5" fill="#6ab840" transform="rotate(28)" />
-      </g>
-
-      {/* Leaf 3 — upper left */}
-      <g opacity={lo(0.65)} transform={`translate(50,${gY - stemLen * 0.69})`}>
-        <ellipse cx="-7" cy="0" rx="12" ry="4.5" fill="#58a034" transform="rotate(-33)" />
-      </g>
-
-      {/* Leaf 4 — upper right */}
-      <g opacity={lo(0.83)} transform={`translate(50,${gY - stemLen * 0.87})`}>
-        <ellipse cx="7" cy="0" rx="11" ry="4" fill="#58a034" transform="rotate(33)" />
-      </g>
-
-      {/* Flower at stem tip */}
-      <g opacity={lo(0.92)} transform={`translate(50,${tip})`}>
-        {[0, 60, 120, 180, 240, 300].map(a => (
-          <ellipse key={a} cx="0" cy="-7" rx="3.5" ry="5.5"
-            fill="#f9a8d4" transform={`rotate(${a})`} />
-        ))}
-        <circle cx="0" cy="0" r="4.5" fill="#fbbf24" />
-      </g>
-    </svg>
-  );
-};
 
 // ─── Focus ────────────────────────────────────────────────────────────────────
 
@@ -88,6 +27,7 @@ const Focus = () => {
   const [running, setRunning] = useState(false);
   const [showPlant, setShowPlant] = useState(false);
   const [plantCount, setPlantCount] = useState<number | null>(null);
+  const [variant, setVariant] = useState<PlantVariant>(randomVariant);
   const counted = useRef(false);
   const interval = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -114,11 +54,13 @@ const Focus = () => {
     setRunning(false);
     setTotalSeconds(minutes * 60);
     setSeconds(minutes * 60);
+    setVariant(randomVariant());
   };
 
   const reset = () => {
     setRunning(false);
     setSeconds(totalSeconds);
+    setVariant(randomVariant());
   };
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -216,7 +158,7 @@ const Focus = () => {
                 {done ? "Volgroeid! 🌸" : progress < 0.01 ? "Zaadje 🌱" : "Groeit…"}
               </p>
               <div style={{ width: 160, height: 210 }}>
-                <PlantSVG progress={progress} />
+                <PlantSVG progress={progress} variant={variant} />
               </div>
               <p className="text-center text-sm text-muted-foreground">
                 {done
