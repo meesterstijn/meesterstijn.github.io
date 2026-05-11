@@ -1,9 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Clock } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Sprout } from "lucide-react";
+import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
+
+const fetchPlantCount = async (): Promise<number> => {
+  const { data } = await supabase.from("counters").select("value").eq("id", 1).single();
+  return data?.value ?? 0;
+};
+const incrementPlantCount = async (): Promise<number> => {
+  const current = await fetchPlantCount();
+  const next = current + 1;
+  await supabase.from("counters").update({ value: next }).eq("id", 1);
+  return next;
+};
+const insertFlower = async (variant: number) => {
+  await supabase.from("flowers").insert({ variant });
+};
 
 const COLORS = ["#4682B4", "#10B981", "#F49E4C", "#AB3428", "#7C3AED", "#000000", "#ffffff"];
 const SIZES = [3, 6, 12, 20];
@@ -150,14 +164,27 @@ const TimerContent = () => {
   const [totalSec, setTotalSec] = useState(5 * 60);
   const [seconds, setSeconds] = useState(5 * 60);
   const [running, setRunning] = useState(false);
+  const [showPlant, setShowPlant] = useState(false);
+  const [variant, setVariant] = useState<PlantVariant>(randomVariant);
+  const [plantCount, setPlantCount] = useState<number | null>(null);
   const interval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const counted = useRef(false);
+  const showPlantRef = useRef(false);
+
+  useEffect(() => { fetchPlantCount().then(setPlantCount); }, []);
 
   useEffect(() => {
     if (running && seconds > 0) {
+      counted.current = false;
       interval.current = setInterval(() => setSeconds(s => s - 1), 1000);
     } else {
       if (interval.current) clearInterval(interval.current);
-      if (seconds === 0) setRunning(false);
+      if (seconds === 0 && !counted.current) {
+        counted.current = true;
+        setRunning(false);
+        incrementPlantCount().then(setPlantCount);
+        if (showPlantRef.current) insertFlower(variant);
+      }
     }
     return () => { if (interval.current) clearInterval(interval.current); };
   }, [running, seconds]);
@@ -169,9 +196,17 @@ const TimerContent = () => {
     setSeconds(next);
   };
 
-  const reset = () => { setRunning(false); setSeconds(totalSec); };
+  const togglePlant = () => {
+    const next = !showPlant;
+    setShowPlant(next);
+    showPlantRef.current = next;
+    if (next) setVariant(randomVariant());
+  };
+
+  const reset = () => { setRunning(false); setSeconds(totalSec); setVariant(randomVariant()); };
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const pct = totalSec > 0 ? seconds / totalSec : 0;
+  const progress = 1 - pct;
   const danger = seconds <= 60 && seconds > 0;
   const done = seconds === 0;
   const C = 2 * Math.PI * 44;
@@ -199,15 +234,17 @@ const TimerContent = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent">
-          <Minus className="h-4 w-4" />
-        </button>
-        <span className="w-12 text-center text-xs text-muted-foreground">1 min</span>
-        <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent">
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+      {!running && (
+        <div className="flex items-center gap-3">
+          <button onClick={() => adjust(-60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent">
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="w-12 text-center text-xs text-muted-foreground">1 min</span>
+          <button onClick={() => adjust(60)} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent">
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -217,18 +254,35 @@ const TimerContent = () => {
           {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           {running ? "Pauzeer" : "Start"}
         </button>
-        <button onClick={reset} className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-medium transition-smooth hover:border-accent">
+        <button onClick={reset} className="rounded-xl border border-border p-2 transition-smooth hover:border-accent hover:text-accent">
           <RotateCcw className="h-4 w-4" />
+        </button>
+        <button
+          onClick={togglePlant}
+          className={`rounded-xl border p-2 transition-smooth hover:border-accent ${showPlant ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+        >
+          <Sprout className="h-4 w-4" />
         </button>
       </div>
 
-      <Link
-        to="/focus"
-        className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium transition-smooth hover:border-accent hover:text-accent"
-      >
-        <Clock className="h-4 w-4" />
-        Focus pagina openen
-      </Link>
+      {showPlant && (
+        <div className="flex flex-col items-center gap-2 border-t border-border pt-3 w-full">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            {done ? "Volgroeid! 🌸" : progress < 0.01 ? "Zaadje 🌱" : "Groeit…"}
+          </p>
+          <div style={{ width: 100, height: 132 }}>
+            <PlantSVG progress={progress} variant={variant} />
+          </div>
+          <p className="text-center text-xs text-muted-foreground">
+            {done ? "Prachtig!" : running ? "Blijf gefocust!" : "Start de timer."}
+          </p>
+          {plantCount !== null && (
+            <p className="text-center text-xs text-muted-foreground">
+              🌸 {plantCount} plantje{plantCount === 1 ? "" : "s"} volgroeid
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

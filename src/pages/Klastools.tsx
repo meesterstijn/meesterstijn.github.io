@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Bold, Trash2, Sprout } from "lucide-react";
+import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Sprout } from "lucide-react";
+import { StoplichtWidget } from "@/components/StoplichtWidget";
+import { TekstbordWidget } from "@/components/TekstbordWidget";
 import { supabase } from "@/lib/supabase";
 import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
 
@@ -14,6 +16,10 @@ const incrementPlantCount = async (): Promise<number> => {
   const next = current + 1;
   await supabase.from("counters").update({ value: next }).eq("id", 1);
   return next;
+};
+
+const insertFlower = async (variant: number) => {
+  await supabase.from("flowers").insert({ variant });
 };
 
 // ─── TIMER ───────────────────────────────────────────────────────────────────
@@ -43,6 +49,7 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
         counted.current = true;
         setRunning(false);
         onDone();
+        if (showPlant) insertFlower(variant);
       }
     }
     return () => { if (interval.current) clearInterval(interval.current); };
@@ -150,134 +157,6 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
 };
 
 // ─── TEKSTBORD ───────────────────────────────────────────────────────────────
-
-const presets = [
-  { label: "Goedemorgen", text: "Wat fijn dat jij er bent.\nOm half 9 gaan we beginnen met stillezen." },
-  { label: "Klaar?",      text: "Ben je klaar? Dan: " },
-];
-
-const FONT_SIZES = [
-  { label: "S", value: "2" },
-  { label: "M", value: "3" },
-  { label: "L", value: "5" },
-];
-
-const Tekstbord = () => {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [fontSize, setFontSize] = useState("3");
-
-  const cmd = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-  };
-
-  const setSize = (value: string) => {
-    setFontSize(value);
-    cmd("fontSize", value);
-  };
-
-  const loadPreset = (text: string) => {
-    if (editorRef.current) {
-      editorRef.current.innerText = text;
-      editorRef.current.focus();
-    }
-  };
-
-  const clear = () => {
-    if (editorRef.current) editorRef.current.innerHTML = "";
-  };
-
-  const toolBtn = "flex items-center justify-center rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm transition-smooth hover:border-accent hover:text-accent";
-
-  return (
-    <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft flex flex-col gap-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tekstbord</p>
-
-      {/* Preset buttons */}
-      <div className="flex flex-wrap gap-2">
-        {presets.map(p => (
-          <button
-            key={p.label}
-            onClick={() => loadPreset(p.text)}
-            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent hover:text-accent"
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-background p-2">
-        <button onClick={() => cmd("bold")} className={toolBtn} title="Vet"><Bold className="h-3.5 w-3.5"/></button>
-
-        <span className="mx-1 h-5 w-px bg-border"/>
-
-        {FONT_SIZES.map(s => (
-          <button key={s.value} onClick={() => setSize(s.value)}
-            className={`${toolBtn} min-w-[30px] font-semibold ${fontSize === s.value ? "border-accent text-accent bg-accent/5" : ""}`}>
-            {s.label}
-          </button>
-        ))}
-
-        <span className="ml-auto"/>
-        <button onClick={clear} className={toolBtn} title="Leegmaken"><Trash2 className="h-3.5 w-3.5"/></button>
-      </div>
-
-      {/* Editor */}
-      <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        data-placeholder=""
-        className="min-h-36 max-h-[50vh] w-full overflow-y-auto rounded-xl border border-border bg-background p-4 text-lg outline-none focus:border-accent"
-        style={{ whiteSpace: "pre-wrap" }}
-      />
-    </div>
-  );
-};
-
-// ─── STOPLICHT ───────────────────────────────────────────────────────────────
-
-type Light = "rood" | "oranje" | "groen";
-
-const lights: { color: Light; label: string; bg: string; glow: string }[] = [
-  { color: "rood",   label: "Je werkt stil en zelfstandig, zonder vragen te stellen.",     bg: "#ef4444", glow: "0 0 40px 10px #ef444488" },
-  { color: "oranje", label: "Je werkt stil. Je steekt je vinger op voor een vraag aan de meester.", bg: "#f97316", glow: "0 0 40px 10px #f9731688" },
-  { color: "groen",  label: "Met een fluisterstem samenwerken met schoudermaatje.", bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
-];
-
-const Stoplicht = () => {
-  const [active, setActive] = useState<Light | null>(null);
-
-  return (
-    <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Stoplicht</p>
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-5">
-          {lights.map(l => (
-            <button
-              key={l.color}
-              onClick={() => setActive(active === l.color ? null : l.color)}
-              className="h-16 w-16 rounded-full transition-all duration-300"
-              style={{
-                backgroundColor: active === l.color ? l.bg : "#3f3f46",
-                boxShadow: active === l.color ? l.glow : "none",
-              }}
-            />
-          ))}
-        </div>
-        {active && (
-          <p className="mt-2 text-center text-sm font-semibold">
-            {lights.find(l => l.color === active)?.label}
-          </p>
-        )}
-        {!active && (
-          <p className="mt-2 text-center text-sm text-muted-foreground">Klik op een lamp</p>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // ─── PAGINA ───────────────────────────────────────────────────────────────────
 
@@ -389,8 +268,8 @@ const Klastools = () => {
               )}
             </div>
           )}
-          <div className={`${showPlant ? "" : "md:col-span-2"} h-full`}><Tekstbord /></div>
-          <Stoplicht />
+          <div className={`${showPlant ? "" : "md:col-span-2"} h-full`}><TekstbordWidget /></div>
+          <StoplichtWidget />
         </div>
       </main>
 

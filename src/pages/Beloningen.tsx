@@ -1,43 +1,12 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, Minus, Trash2, Trophy, Star, Lock, ArrowUpRight, X } from "lucide-react";
-
-const VerjaardagTool = lazy(() => import("@/components/VerjaardagTool"));
+import { Plus, Minus, Trash2, Trophy, Star, ArrowUpRight } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
 
 type Reward = { id: number; label: string; goal: number; claimed: boolean };
 
-type Unlockable =
-  | { id: string; emoji: string; naam: string; punten: number; desc: string; type: "href"; href: string }
-  | { id: string; emoji: string; naam: string; punten: number; desc: string; type: "route"; route: string }
-  | { id: string; emoji: string; naam: string; punten: number; desc: string; type: "mop" }
-  | { id: string; emoji: string; naam: string; punten: number; desc: string; type: "feest" };
-
-const UNLOCKABLES: Unlockable[] = [
-  { id: "muziek",  emoji: "🎵", naam: "Muziek aan",      punten: 10,  desc: "Zet Spotify aan als achtergrondmuziek",            type: "href",  href: "https://open.spotify.com" },
-  { id: "tekenen", emoji: "🎨", naam: "Vrij tekenen",    punten: 20,  desc: "Iedereen mag vrij tekenen op het whiteboard",      type: "route", route: "/whiteboard" },
-  { id: "spellen", emoji: "🎮", naam: "Klassikaal spel", punten: 30,  desc: "Kies samen een spel uit de spellenhoek",            type: "route", route: "/spellen" },
-  { id: "filmpje", emoji: "🎬", naam: "Filmpje kijken",  punten: 40,  desc: "Zoek samen een leuk filmpje op YouTube",           type: "href",  href: "https://youtube.com" },
-  { id: "mop",     emoji: "🤣", naam: "Moppenshow",      punten: 50,  desc: "De meester vertelt zijn allerslechtste mop",       type: "mop" },
-  { id: "math",    emoji: "🏆", naam: "99math battle",   punten: 60,  desc: "Klassikaal tafels-battle op 99math.com",            type: "href",  href: "https://99math.com" },
-  { id: "dans",    emoji: "💃", naam: "Danspauze",       punten: 75,  desc: "3 minuten dansen — stilzitten is verboden!",       type: "href",  href: "https://open.spotify.com" },
-  { id: "feest",   emoji: "🎉", naam: "Klasfeestje",     punten: 100, desc: "Een groot feest voor de hele klas!",                type: "feest" },
-];
-
-const MOPPEN = [
-  "Wat zegt een nul tegen een acht?\n\n'Mooi riem heb je aan!'",
-  "Hoe noem je een boemerang die niet terugkomt?\n\nEen stok.",
-  "Wat heeft vier wielen en vliegt?\n\nEen vuilniswagen.",
-  "Waarom snauwt een hond?\n\nOmdat hij niet kan snateren.",
-  "Wat is snel, groen en gevaarlijk?\n\nEen kikker met een brommer.",
-  "Waarom huilt een banaan?\n\nOmdat hij zijn schil kwijt is.",
-  "Knock knock! — Wie is daar? — Koe. — Koe wie?\n\nKoe-lderboe! 🐄",
-  "Wat is bruin en plakt aan het plafond?\n\nEen domme karamel.",
-  "Waarom had de wiskundeleraar een liniaal?\n\nOm de grenzen aan te geven.",
-  "Hoe noem je een vis zonder ogen?\n\nEen vs.",
-];
 
 const fetchPoints = async (): Promise<number> => {
   const { data } = await supabase.from("class_points").select("value").eq("id", 1).single();
@@ -71,8 +40,6 @@ const Beloningen = () => {
   const [newLabel, setNewLabel] = useState("");
   const [newGoal, setNewGoal] = useState("");
   const [loading, setLoading] = useState(true);
-  const [mop, setMop] = useState<string | null>(null);
-  const [showFeest, setShowFeest] = useState(false);
 
   const load = async () => {
     const [p, r] = await Promise.all([fetchPoints(), fetchRewards()]);
@@ -107,13 +74,6 @@ const Beloningen = () => {
   const handleDelete = async (id: number) => {
     await deleteReward(id);
     setRewards(prev => prev.filter(r => r.id !== id));
-  };
-
-  const handleUnlock = (item: Unlockable) => {
-    if (points < item.punten) return;
-    if (item.type === "href") { window.open(item.href, "_blank", "noreferrer"); return; }
-    if (item.type === "mop") { setMop(MOPPEN[Math.floor(Math.random() * MOPPEN.length)]); return; }
-    if (item.type === "feest") { setShowFeest(true); return; }
   };
 
   return (
@@ -268,46 +228,24 @@ const Beloningen = () => {
               </div>
             </div>
 
-            {/* Unlockable content */}
+            {/* Bloemenveld tegel */}
             <section className="mt-14 animate-fade-up" style={{ animationDelay: "120ms" }}>
               <div className="mb-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Klassenpunten</p>
-                <h2 className="mt-1 font-display text-2xl font-semibold md:text-3xl">Unlockable content</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Spaar genoeg punten om dit vrij te spelen.</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Groeien</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold md:text-3xl">Bloemenveld</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Elke voltooide focustimer laat een bloem groeien in het veld.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {UNLOCKABLES.map(item => {
-                  const unlocked = points >= item.punten;
-                  const inner = (
-                    <div
-                      className={`relative flex h-40 flex-col justify-between rounded-3xl border-2 p-5 transition-smooth ${
-                        unlocked
-                          ? "border-accent bg-accent/5 shadow-tile hover:-translate-y-1 hover:shadow-tile cursor-pointer"
-                          : "border-border bg-card opacity-50 cursor-not-allowed"
-                      }`}
-                    >
-                      {!unlocked && (
-                        <Lock className="absolute right-4 top-4 h-4 w-4 text-muted-foreground" />
-                      )}
-                      {unlocked && (
-                        <ArrowUpRight className="absolute right-4 top-4 h-4 w-4 text-accent opacity-60" />
-                      )}
-                      <span className="text-3xl">{item.emoji}</span>
-                      <div>
-                        <p className="font-display font-semibold leading-tight">{item.naam}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground truncate">{item.desc}</p>
-                        <p className={`mt-1 text-xs font-semibold ${unlocked ? "text-accent" : "text-muted-foreground"}`}>
-                          {unlocked ? "Ontgrendeld!" : `${item.punten} ⭐ nodig`}
-                        </p>
-                      </div>
-                    </div>
-                  );
-
-                  if (!unlocked) return <div key={item.id}>{inner}</div>;
-                  if (item.type === "route") return <Link key={item.id} to={item.route}>{inner}</Link>;
-                  return <button key={item.id} onClick={() => handleUnlock(item)} className="text-left">{inner}</button>;
-                })}
-              </div>
+              <Link
+                to="/bloemenveld"
+                className="inline-flex items-center gap-4 rounded-3xl border border-border bg-card px-8 py-5 shadow-soft transition-smooth hover:border-accent hover:shadow-tile"
+              >
+                <span className="text-4xl">🌸</span>
+                <div>
+                  <p className="font-display text-lg font-semibold">Bekijk het bloemenveld</p>
+                  <p className="text-sm text-muted-foreground">Zie welke bloemen de klas al heeft laten groeien</p>
+                </div>
+                <ArrowUpRight className="ml-4 h-5 w-5 text-accent opacity-60" />
+              </Link>
             </section>
           </>
         )}
@@ -317,33 +255,6 @@ const Beloningen = () => {
         </footer>
       </main>
 
-      {/* Mop popup */}
-      {mop && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-tile mx-4">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="font-display text-xl font-semibold">🤣 Moppenshow</p>
-              <button onClick={() => setMop(null)} className="rounded-xl border border-border p-1.5 transition-smooth hover:border-accent">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-lg leading-relaxed whitespace-pre-line">{mop}</p>
-            <button
-              onClick={() => setMop(MOPPEN[Math.floor(Math.random() * MOPPEN.length)])}
-              className="mt-6 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
-            >
-              Nog een mop
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Klasfeestje */}
-      {showFeest && (
-        <Suspense fallback={null}>
-          <VerjaardagTool onClose={() => setShowFeest(false)} />
-        </Suspense>
-      )}
     </div>
   );
 };

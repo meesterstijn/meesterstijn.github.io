@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Play, Pause, RotateCcw, Sprout } from "lucide-react";
+import { Play, Pause, RotateCcw, Sprout, Plus, Minus } from "lucide-react";
 import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
+import { StoplichtWidget } from "@/components/StoplichtWidget";
 
 const presets = [5, 10, 15, 20, 30];
 
@@ -21,11 +22,16 @@ const incrementPlantCount = async (): Promise<number> => {
   return next;
 };
 
+const insertFlower = async (variant: number) => {
+  await supabase.from("flowers").insert({ variant });
+};
+
 const Focus = () => {
   const [totalSeconds, setTotalSeconds] = useState(25 * 60);
   const [seconds, setSeconds] = useState(25 * 60);
   const [running, setRunning] = useState(false);
   const [showPlant, setShowPlant] = useState(false);
+  const [showStoplicht, setShowStoplicht] = useState(false);
   const [plantCount, setPlantCount] = useState<number | null>(null);
   const [variant, setVariant] = useState<PlantVariant>(randomVariant);
   const counted = useRef(false);
@@ -45,6 +51,7 @@ const Focus = () => {
         counted.current = true;
         setRunning(false);
         incrementPlantCount().then(setPlantCount);
+        insertFlower(variant);
       }
     }
     return () => { if (interval.current) clearInterval(interval.current); };
@@ -61,6 +68,13 @@ const Focus = () => {
     setRunning(false);
     setSeconds(totalSeconds);
     setVariant(randomVariant());
+  };
+
+  const adjust = (delta: number) => {
+    if (running) return;
+    const next = Math.max(60, totalSeconds + delta);
+    setTotalSeconds(next);
+    setSeconds(next);
   };
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -80,10 +94,42 @@ const Focus = () => {
           <p className="mt-3 text-muted-foreground">Zet een timer en werk geconcentreerd.</p>
         </div>
 
-        <div className="flex flex-wrap items-start justify-center gap-12">
+        <div className="flex justify-center">
+          {/* Timer — relatief anker, zijpanelen hangen er absoluut aan */}
+          <div className="animate-fade-up relative flex flex-col items-center gap-10">
 
-          {/* Timer */}
-          <div className="animate-fade-up flex flex-col items-center gap-10">
+            {/* Stoplicht — links */}
+            {showStoplicht && (
+              <div className="absolute top-0 animate-fade-up" style={{ right: "calc(100% + 32px)", width: 240 }}>
+                <StoplichtWidget />
+              </div>
+            )}
+
+            {/* Plant — rechts */}
+            {showPlant && (
+              <div className="absolute top-0 animate-fade-up flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft" style={{ left: "calc(100% + 32px)", width: 240 }}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                  {done ? "Volgroeid! 🌸" : progress < 0.01 ? "Zaadje 🌱" : "Groeit…"}
+                </p>
+                <div style={{ width: 160, height: 210 }}>
+                  <PlantSVG progress={progress} variant={variant} />
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  {done
+                    ? "Prachtig! Jij hebt gefocust."
+                    : running
+                    ? "Blijf gefocust, de plant groeit!"
+                    : "Start de timer om te laten groeien."}
+                </p>
+                {plantCount !== null && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    🌸 {plantCount} plantje{plantCount === 1 ? "" : "s"} volgroeid
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Timercirkel */}
             <div className="relative h-72 w-72">
               <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="3" className="text-border" />
@@ -109,6 +155,21 @@ const Focus = () => {
             </div>
 
             <div className="flex gap-4">
+              {!running && (
+                <button
+                  onClick={() => setShowStoplicht(v => !v)}
+                  title="Stoplicht"
+                  className={`flex items-center justify-center rounded-2xl border px-5 py-3 text-base font-medium transition-smooth hover:border-accent ${showStoplicht ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+                >
+                  <svg width="22" height="10" viewBox="0 0 22 10" fill="none">
+                    <circle cx="4" cy="5" r="4" fill="#ef4444"/>
+                    <circle cx="11" cy="5" r="4" fill="#f97316"/>
+                    <circle cx="18" cy="5" r="4" fill="#22c55e"/>
+                  </svg>
+                </button>
+              )}
+              {!running && <button onClick={() => adjust(-60)} className="flex items-center justify-center rounded-2xl border border-border px-5 py-3 text-base font-medium transition-smooth hover:border-accent hover:text-accent"><Minus className="h-5 w-5" /></button>}
+              {!running && <button onClick={() => adjust(60)}  className="flex items-center justify-center rounded-2xl border border-border px-5 py-3 text-base font-medium transition-smooth hover:border-accent hover:text-accent"><Plus  className="h-5 w-5" /></button>}
               <button
                 onClick={() => setRunning(r => !r)}
                 disabled={done}
@@ -150,30 +211,6 @@ const Focus = () => {
               </div>
             )}
           </div>
-
-          {/* Plant panel */}
-          {showPlant && (
-            <div className="animate-fade-up flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft" style={{ width: 240 }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                {done ? "Volgroeid! 🌸" : progress < 0.01 ? "Zaadje 🌱" : "Groeit…"}
-              </p>
-              <div style={{ width: 160, height: 210 }}>
-                <PlantSVG progress={progress} variant={variant} />
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {done
-                  ? "Prachtig! Jij hebt gefocust."
-                  : running
-                  ? "Blijf gefocust, de plant groeit!"
-                  : "Start de timer om te laten groeien."}
-              </p>
-              {plantCount !== null && (
-                <p className="text-center text-xs text-muted-foreground">
-                  🌸 {plantCount} plantje{plantCount === 1 ? "" : "s"} volgroeid
-                </p>
-              )}
-            </div>
-          )}
         </div>
       </main>
     </div>
