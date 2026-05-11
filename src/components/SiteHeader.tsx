@@ -3,6 +3,7 @@ import { GraduationCap, Cloud, Lock } from "lucide-react";
 
 const links = [
   { to: "/", label: "Start" },
+  { to: "/notities", label: "Notities" },
   { to: "/planning", label: "Planning" },
   { to: "/dagritme", label: "Dagritme" },
   { to: "/weer", label: "Weer", icon: Cloud },
