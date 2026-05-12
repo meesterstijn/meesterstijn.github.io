@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {
   PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
   Puzzle, LayoutList, Music2, Youtube, Radio, Image as ImageIcon,
-  ArrowUpRight, ListChecks, Trophy, ClipboardList,
+  ArrowUpRight, ListChecks, Trophy, ClipboardList, Cloud,
   type LucideIcon,
 } from "lucide-react";
 import { ClockCard } from "@/components/ClockCard";
@@ -37,6 +37,7 @@ const quickLinks = [
   { label: "Youtube", icon: Youtube, href: "https://youtube.com" },
   { label: "Groot Nieuws Radio", icon: Radio, href: "https://www.grootnieuwsradio.nl/" },
   { label: "Free Bible Images", icon: ImageIcon, href: "https://www.freebibleimages.org/" },
+  { label: "Cloudwise", icon: Cloud, href: "https://cool.cloudwise.app" },
 ];
 
 const toneClasses: Record<Tile["tone"], string> = {

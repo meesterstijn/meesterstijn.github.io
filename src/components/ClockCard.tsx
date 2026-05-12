@@ -93,8 +93,8 @@ export const ClockCard = () => {
         className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full opacity-20 blur-3xl"
         style={{ background: "hsl(var(--highlight))" }}
       />
-      <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div>
+      <div className="relative flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="text-center md:text-left">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground/60">
             Vandaag is het
           </p>
