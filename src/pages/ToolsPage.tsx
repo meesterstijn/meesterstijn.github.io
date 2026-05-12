@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Clock, X, Globe, BookOpen, Bookmark, PartyPopper, LayoutGrid, Hand } from "lucide-react";
+import { Clock, X, Globe, BookOpen, Bookmark, PartyPopper, LayoutGrid, Hand, Swords } from "lucide-react";
 
 const KaartTool      = lazy(() => import("@/components/KaartTool"));
 const SpellingTool   = lazy(() => import("@/components/SpellingTool"));
@@ -430,6 +430,19 @@ const ToolsPage = () => {
               <div>
                 <p className="font-display text-xl font-semibold">Werkwoordspelling</p>
                 <p className="mt-1 text-sm text-muted-foreground">Stappenplan voor persoonsvorm, VD, infinitief en bijvoeglijk VD.</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/tafelvoetbal"
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft text-left transition-smooth hover:-translate-y-1 hover:shadow-tile hover:border-accent"
+            >
+              <div className="rounded-2xl bg-secondary p-3">
+                <Swords className="h-6 w-6 text-primary" strokeWidth={1.6} />
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold">Klassement Tafelvoetbal</p>
+                <p className="mt-1 text-sm text-muted-foreground">Poules, ranglijst en puntentelling voor collega's.</p>
               </div>
             </Link>
           </div>

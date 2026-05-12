@@ -25,6 +25,7 @@ const Prive           = lazy(() => import("./pages/Prive.tsx"));
 const Notities        = lazy(() => import("./pages/Notities.tsx"));
 const Bloemenveld     = lazy(() => import("./pages/Bloemenveld.tsx"));
 const Werkwoordspelling = lazy(() => import("./pages/Werkwoordspelling.tsx"));
+const Tafelvoetbal    = lazy(() => import("./pages/Tafelvoetbal.tsx"));
 const NotFound        = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
@@ -95,6 +96,7 @@ const App = () => (
           <Route path="/notities" element={<Notities />} />
           <Route path="/bloemenveld" element={<Bloemenveld />} />
           <Route path="/werkwoordspelling" element={<Werkwoordspelling />} />
+          <Route path="/tafelvoetbal" element={<Tafelvoetbal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
