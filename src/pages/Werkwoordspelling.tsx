@@ -36,17 +36,17 @@ const P_TT: Node = {
 };
 const P_VT_JA: Node = {
   type: "r",
-  text: "Laatste letter staat in 't kofschip",
+  text: "Laatste letter staat in 't kofschip x",
   items: ["enkelvoud:  ik-vorm + te", "meervoud:  ik-vorm + ten"],
 };
 const P_VT_NEE: Node = {
   type: "r",
-  text: "Laatste letter staat niet in 't kofschip",
+  text: "Laatste letter staat niet in 't kofschip x",
   items: ["enkelvoud:  ik-vorm + de", "meervoud:  ik-vorm + den"],
 };
 const P_VT_K: Node = {
   type: "q", id: "p-k",
-  text: "Zit de laatste letter van de ik-vorm in 't kofschip?",
+  text: "Zit de laatste letter van de ik-vorm in 't kofschip x?",
   kofschip: true,
   choices: [{ label: "Ja", next: P_VT_JA }, { label: "Nee", next: P_VT_NEE }],
 };
@@ -67,7 +67,7 @@ const V_JA: Node = { type: "r", text: "Voltooid deelwoord eindigt op  -t", items
 const V_NEE: Node = { type: "r", text: "Voltooid deelwoord eindigt op  -d", items: ["Net als gestreept:  ge-  /  be-  /  ver-  +  ik-vorm  +  d"] };
 const V_K: Node = {
   type: "q", id: "vd-k",
-  text: "Zit de laatste letter van de ik-vorm in 't kofschip?",
+  text: "Zit de laatste letter van de ik-vorm in 't kofschip x?",
   kofschip: true,
   choices: [{ label: "Ja", next: V_JA }, { label: "Nee", next: V_NEE }],
 };
@@ -171,7 +171,7 @@ const buildPath = (root: Node, choices: Record<string, string>): Node[] => {
 
 const KofschipLetters = () => (
   <div className="mt-3 flex flex-wrap gap-1.5">
-    {["t", "k", "f", "s", "ch", "p"].map(l => (
+    {["t", "k", "f", "s", "ch", "p", "x"].map(l => (
       <span
         key={l}
         className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-2 text-sm font-bold text-amber-800"
@@ -366,7 +366,7 @@ const Werkwoordspelling = () => {
                 </p>
                 <div className="my-2 flex justify-center text-5xl">⛵</div>
                 <div className="flex flex-wrap justify-center gap-1.5">
-                  {["t", "k", "f", "s", "ch", "p"].map(l => (
+                  {["t", "k", "f", "s", "ch", "p", "x"].map(l => (
                     <span
                       key={l}
                       className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-2 text-sm font-bold text-amber-800"
