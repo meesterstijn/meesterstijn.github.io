@@ -14,21 +14,51 @@ const FONT_SIZES = [
 
 const STORAGE_KEY = "klastools-tekstbord-html";
 
+const getSavedContent = () => {
+  try {
+    return sessionStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+
+const setSavedContent = (html: string) => {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, html);
+    localStorage.setItem(STORAGE_KEY, html);
+  } catch {
+    // Opslaan is een extra gemak; de editor moet blijven werken als opslag geblokkeerd is.
+  }
+};
+
 export const TekstbordWidget = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState("3");
 
   const saveContent = () => {
     if (editorRef.current) {
-      sessionStorage.setItem(STORAGE_KEY, editorRef.current.innerHTML);
+      setSavedContent(editorRef.current.innerHTML);
     }
   };
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
+    const saved = getSavedContent();
     if (saved && editorRef.current) {
       editorRef.current.innerHTML = saved;
     }
+  }, []);
+
+  useEffect(() => {
+    const saveWhenHidden = () => {
+      if (document.visibilityState === "hidden") saveContent();
+    };
+    window.addEventListener("beforeunload", saveContent);
+    document.addEventListener("visibilitychange", saveWhenHidden);
+    return () => {
+      saveContent();
+      window.removeEventListener("beforeunload", saveContent);
+      document.removeEventListener("visibilitychange", saveWhenHidden);
+    };
   }, []);
 
   const cmd = (command: string, value?: string) => {
@@ -96,6 +126,7 @@ export const TekstbordWidget = () => {
         className="min-h-36 flex-1 w-full overflow-y-auto rounded-xl border border-border bg-background p-4 text-lg outline-none focus:border-accent"
         style={{ whiteSpace: "pre-wrap" }}
         onInput={saveContent}
+        onBlur={saveContent}
       />
     </div>
   );
