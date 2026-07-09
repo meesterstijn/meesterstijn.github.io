@@ -23,6 +23,7 @@ type Evt = {
 };
 
 const raw = [
+  { jaar: "Begin",        y: -5650, titel: "Adam en Eva",              era: "Bijbelse tijd",                        omschrijving: "Adam en Eva zijn volgens de Bijbel de eerste mensen. Zij leven in de hof van Eden en horen bij het begin van de Bijbelse geschiedenis." },
   { jaar: "± 5500 v.Chr.", y: -5500, titel: "Trijntje",                  era: "Prehistorie",          canon: true,  omschrijving: "Trijntje leefde rond 5500 voor Christus en is het oudst bekende menselijke skelet van Nederland. Haar botten werden in 1997 gevonden bij Hardinxveld-Giessendam. Ze was een jager-verzamelaarster van 40–60 jaar oud en werd begraven op een zandrug, naast drie honden." },
   { jaar: "± 3000 v.Chr.", y: -3000, titel: "Hunebedden",               era: "Prehistorie",          canon: true,  omschrijving: "Prehistorische grafmonumenten in Drenthe, gebouwd door de eerste bewoners van Nederland." },
   { jaar: "± 4 v.Chr.",   y: -4,     titel: "Geboorte van Jezus",       era: "Bijbelse tijd",                        omschrijving: "Jezus wordt geboren in Bethlehem. Het begin van de christelijke jaartelling." },

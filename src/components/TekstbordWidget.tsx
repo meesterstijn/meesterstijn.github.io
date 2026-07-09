@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Bold, Trash2 } from "lucide-react";
 
 const PRESETS = [
@@ -12,13 +12,29 @@ const FONT_SIZES = [
   { label: "L", value: "5" },
 ];
 
+const STORAGE_KEY = "klastools-tekstbord-html";
+
 export const TekstbordWidget = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState("3");
 
+  const saveContent = () => {
+    if (editorRef.current) {
+      sessionStorage.setItem(STORAGE_KEY, editorRef.current.innerHTML);
+    }
+  };
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved && editorRef.current) {
+      editorRef.current.innerHTML = saved;
+    }
+  }, []);
+
   const cmd = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
+    saveContent();
   };
 
   const setSize = (value: string) => {
@@ -30,11 +46,15 @@ export const TekstbordWidget = () => {
     if (editorRef.current) {
       editorRef.current.innerText = text;
       editorRef.current.focus();
+      saveContent();
     }
   };
 
   const clear = () => {
-    if (editorRef.current) editorRef.current.innerHTML = "";
+    if (editorRef.current) {
+      editorRef.current.innerHTML = "";
+      saveContent();
+    }
   };
 
   const toolBtn = "flex items-center justify-center rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm transition-smooth hover:border-accent hover:text-accent";
@@ -75,6 +95,7 @@ export const TekstbordWidget = () => {
         data-placeholder=""
         className="min-h-36 flex-1 w-full overflow-y-auto rounded-xl border border-border bg-background p-4 text-lg outline-none focus:border-accent"
         style={{ whiteSpace: "pre-wrap" }}
+        onInput={saveContent}
       />
     </div>
   );

@@ -39,6 +39,10 @@ const weerTekst = (code: number) => {
 };
 
 const jasNodig = (temp: number, code: number) => !(temp >= 22 && code <= 1);
+const jasTekst = (temp: number) =>
+  temp >= 16
+    ? "Neem je jas mee naar buiten. Je kunt hem uittrekken als je het warm krijgt."
+    : "Neem je jas mee naar buiten.";
 
 const Weer = () => {
   const [weer, setWeer]       = useState<WeerData | null>(null);
@@ -98,7 +102,7 @@ const Weer = () => {
                   </p>
                   <p className="mt-4 text-base leading-relaxed opacity-85 max-w-xs mx-auto">
                     {jas
-                      ? "Neem je jas mee naar buiten. Je kunt hem uittrekken als je het warm krijgt."
+                      ? jasTekst(weer.temp)
                       : "Het is lekker warm vandaag. Lekker buiten spelen!"}
                   </p>
                 </div>
@@ -120,7 +124,8 @@ const Weer = () => {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-card/60 px-5 py-4 text-sm text-muted-foreground leading-relaxed">
-                  Geen jas nodig als het <strong>22°C of warmer</strong> is met heldere lucht. Anders: jas mee — buiten kun je hem altijd uittrekken.
+                  Geen jas nodig als het <strong>22°C of warmer</strong> is met heldere lucht. Anders: jas mee
+                  {weer.temp >= 16 ? " — buiten kun je hem uittrekken als je het warm krijgt." : "."}
                 </div>
               </div>
 
