@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Home, Maximize2, Minimize2 } from "lucide-react";
 import AuthGate from "@/components/AuthGate";
 import { AuthProvider } from "@/context/AuthContext";
+import { ClassProvider } from "@/context/ClassContext";
 
 const Index           = lazy(() => import("./pages/Index.tsx"));
 const Planning        = lazy(() => import("./pages/Planning.tsx"));
@@ -75,6 +76,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
       <AuthGate>
+      <ClassProvider>
       <BrowserRouter>
         <ScrollToTop />
         <Suspense fallback={null}>
@@ -109,6 +111,7 @@ const App = () => (
           <FullscreenButton />
         </div>
       </BrowserRouter>
+      </ClassProvider>
       </AuthGate>
       </AuthProvider>
     </TooltipProvider>

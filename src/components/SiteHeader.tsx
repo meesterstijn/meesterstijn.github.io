@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { GraduationCap, Cloud, Lock } from "lucide-react";
+import { ClassSwitcher } from "@/components/ClassSwitcher";
 
 const links = [
   { to: "/", label: "Start" },
@@ -22,20 +23,22 @@ export const SiteHeader = () => {
           </span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
-          {links.map((l) => {
+          {links.map((l, i) => {
             const active = pathname === l.to;
             return (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={`relative rounded-full px-4 py-2 text-sm font-medium transition-smooth ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {l.icon ? <span className="flex items-center gap-1.5"><l.icon className="h-3.5 w-3.5" />{l.label}</span> : l.label}
-              </Link>
+              <span key={l.to} className="flex items-center gap-1">
+                <Link
+                  to={l.to}
+                  className={`relative rounded-full px-4 py-2 text-sm font-medium transition-smooth ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {l.icon ? <span className="flex items-center gap-1.5"><l.icon className="h-3.5 w-3.5" />{l.label}</span> : l.label}
+                </Link>
+                {i === 0 && <ClassSwitcher />}
+              </span>
             );
           })}
         </nav>

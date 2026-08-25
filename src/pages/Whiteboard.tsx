@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Sprout } from "lucide-react";
 import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
+import { BeurtstokjesCompact } from "@/components/BeurtstokjesCompact";
 
 const fetchPlantCount = async (): Promise<number> => {
   const { data } = await supabase.from("counters").select("value").eq("id", 1).single();
@@ -675,76 +676,6 @@ const VerhoudingContent = () => {
   );
 };
 
-// ─── BeurtstokjesContent ──────────────────────────────────────────────────────
-
-const BeurtstokjesContent = () => {
-  const [leerlingen, setLeerlingen] = useState<string[]>([]);
-  const [display, setDisplay]       = useState<string>("");
-  const [gekozen, setGekozen]       = useState<string | null>(null);
-  const [draaien, setDraaien]       = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    supabase.from("taakjes").select("leerlingen").eq("id", 1).single()
-      .then(({ data }) => setLeerlingen(data?.leerlingen ?? []));
-  }, []);
-
-  const trek = () => {
-    if (draaien || leerlingen.length === 0) return;
-    setGekozen(null);
-    setDraaien(true);
-    const winnaar = leerlingen[Math.floor(Math.random() * leerlingen.length)];
-    const pool = leerlingen.length > 1 ? leerlingen : [winnaar];
-    let stap = 0;
-    const stapMax = 15; // ~1 seconde totaal
-    const volgende = () => {
-      stap++;
-      setDisplay(pool[Math.floor(Math.random() * pool.length)]);
-      if (stap < stapMax) {
-        const delay = 30 + Math.pow(stap / stapMax, 2) * 100;
-        timerRef.current = setTimeout(volgende, delay);
-      } else {
-        setDisplay(winnaar);
-        setGekozen(winnaar);
-        setDraaien(false);
-      }
-    };
-    volgende();
-  };
-
-  return (
-    <div className="flex flex-col gap-3 p-4" style={{ width: 240 }}>
-      {/* Naam display */}
-      <div className="flex h-20 items-center justify-center rounded-2xl border border-border bg-background">
-        {leerlingen.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center px-3">Voeg leerlingen toe via Taakjes of Beurtstokjes.</p>
-        ) : (
-          <span
-            className="font-display font-bold text-center px-3 leading-tight"
-            style={{
-              fontSize: display.length > 14 ? "1.1rem" : display.length > 8 ? "1.4rem" : "1.8rem",
-              color: gekozen ? "hsl(var(--accent))" : "hsl(var(--foreground))",
-              transition: "color 0.4s",
-            }}
-          >
-            {display || "—"}
-          </span>
-        )}
-      </div>
-
-      {/* Trek-knop */}
-      <button
-        onClick={trek}
-        disabled={draaien || leerlingen.length === 0}
-        className="rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition-smooth hover:opacity-90 disabled:opacity-40"
-      >
-        {draaien ? "…" : "Trek!"}
-      </button>
-
-    </div>
-  );
-};
-
 // ─── Whiteboard ───────────────────────────────────────────────────────────────
 
 const Whiteboard = () => {
@@ -948,7 +879,9 @@ const Whiteboard = () => {
 
           {showBeurtstokjes && (
             <DraggableWidget title="Beurtstokjes" initialPos={{ x: 800, y: 20 }} onClose={() => setShowBeurtstokjes(false)}>
-              <BeurtstokjesContent />
+              <div className="p-4" style={{ width: 240 }}>
+                <BeurtstokjesCompact boxHeight="h-20" />
+              </div>
             </DraggableWidget>
           )}
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react
 import { X, Plus, RotateCw, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
+import { useClasses } from "@/context/ClassContext";
 
 const PAD = 44;
 const DESK_W = 0.65;
@@ -26,9 +27,9 @@ const DEFAULT_LOKAAL: Lokaal = { breedte: 9, diepte: 7, bord: 4, bordWand: "bove
 
 // ─── Supabase helpers ─────────────────────────────────────────────────────────
 
-async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } | null> {
+async function fetchFromSupabase(classId: string): Promise<{ lokaal: Lokaal; tafels: Tafel[] } | null> {
   try {
-    const { data } = await supabase.from("plaatsen").select("lokaal,tafels").eq("id", 1).single();
+    const { data } = await supabase.from("plaatsen").select("lokaal,tafels").eq("class_id", classId).maybeSingle();
     if (data) {
       const lok = data.lokaal ?? DEFAULT_LOKAAL;
       if (lok.bord == null) lok.bord = DEFAULT_LOKAAL.bord;
@@ -40,21 +41,14 @@ async function fetchFromSupabase(): Promise<{ lokaal: Lokaal; tafels: Tafel[] } 
   return null;
 }
 
-async function saveToSupabase(lokaal: Lokaal, tafels: Tafel[]): Promise<string | null> {
+async function saveToSupabase(classId: string, lokaal: Lokaal, tafels: Tafel[]): Promise<string | null> {
   try {
-    const { error } = await supabase.from("plaatsen").upsert({ id: 1, lokaal, tafels });
+    const { error } = await supabase.from("plaatsen").upsert({ class_id: classId, lokaal, tafels }, { onConflict: "class_id" });
     return error ? error.message : null;
   } catch (e) {
     return String(e);
   }
 }
-
-const fetchLeerlingen = async (): Promise<string[]> => {
-  try {
-    const { data } = await supabase.from("taakjes").select("leerlingen").eq("id", 1).single();
-    return data?.leerlingen ?? [];
-  } catch { return []; }
-};
 
 // ─── Default layout generator ─────────────────────────────────────────────────
 
@@ -108,9 +102,11 @@ const buildDefaultLayout = (leerlingen: string[], lokaal: Lokaal): Tafel[] => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
+  const { activeClass, activeClassId, activeStudents, loading: klasLoading } = useClasses();
+  const leerlingen = activeStudents.map(s => s.name);
+
   const [tafels, setTafels] = useState<Tafel[]>([]);
   const [lokaal, setLokaal] = useState<Lokaal>(DEFAULT_LOKAAL);
-  const [leerlingen, setLeerlingen] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [svgSize, setSvgSize] = useState({ w: 0, h: 0 });
   const [breedte, setBreedte] = useState("9");
@@ -130,13 +126,18 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
   useEffect(() => { lokaalRef.current = lokaal; }, [lokaal]);
   useEffect(() => { tabelsRef.current = tafels; }, [tafels]);
 
-  // Laad plaatsen + leerlingenlijst tegelijk
+  // Laad de indeling van de actieve klas — opnieuw bij elke klaswissel. Wachten tot
+  // useClasses() klaar is, zodat de leerlingenlijst hieronder al klopt voor de auto-opstelling.
   useEffect(() => {
-    Promise.all([fetchFromSupabase(), fetchLeerlingen()]).then(([data, ll]) => {
-      setLeerlingen(ll);
+    if (klasLoading) return;
+    setSelectedId(null);
+    if (!activeClassId) { setTafels([]); setLoading(false); return; }
+    setLoading(true);
+    fetchFromSupabase(activeClassId).then(data => {
       const s = data ?? { lokaal: DEFAULT_LOKAAL, tafels: [] };
       // Als er nog geen tafels zijn → automatisch opstelling maken op basis van leerlingen
-      const tafelsToLoad = s.tafels.length > 0 ? s.tafels : buildDefaultLayout(ll, s.lokaal);
+      const tafelsToLoad = s.tafels.length > 0 ? s.tafels : buildDefaultLayout(leerlingen, s.lokaal);
+      initialLoad.current = true; // dit is een load, geen wijziging — sla niet meteen weer op
       setTafels(tafelsToLoad);
       setLokaal(s.lokaal);
       setBreedte(String(s.lokaal.breedte));
@@ -144,20 +145,23 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
       setBord(String(s.lokaal.bord));
       setLoading(false);
     });
-  }, []);
+    // leerlingen bewust buiten de deps: alleen relevant op het moment dat een klas zonder
+    // opgeslagen indeling geladen wordt, niet bij elke wijziging van de leerlingenlijst.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClassId, klasLoading]);
 
   // Debounced save
   useEffect(() => {
     if (initialLoad.current) { initialLoad.current = false; return; }
-    if (loading) return;
+    if (loading || !activeClassId) return;
     setSaveStatus("saving");
     const timer = setTimeout(async () => {
-      const err = await saveToSupabase(lokaal, tafels);
+      const err = await saveToSupabase(activeClassId, lokaal, tafels);
       if (err) { setSaveError(err); setSaveStatus("error"); }
       else { setSaveError(null); setSaveStatus("saved"); }
     }, 1200);
     return () => clearTimeout(timer);
-  }, [lokaal, tafels, loading]);
+  }, [lokaal, tafels, loading, activeClassId]);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -326,7 +330,9 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Klaslokaal</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                {activeClass ? activeClass.name : "Klaslokaal"}
+              </p>
               <h2 className="font-display text-xl font-semibold">Plaatsen</h2>
               <p className={`mt-0.5 text-xs ${saveStatus === "error" ? "text-red-500" : "text-muted-foreground"}`}>
                 {saveStatus === "saving" ? "Opslaan…" : saveStatus === "error" ? "⚠ Opslaan mislukt" : "✓ Opgeslagen"}
@@ -341,10 +347,22 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
           </div>
 
           {/* Leerlingen info */}
-          {leerlingen.length > 0 && (
+          {!activeClass ? (
             <div className="rounded-2xl border border-border bg-background/60 px-4 py-3">
               <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{leerlingen.length} leerlingen</span> uit de lijst
+                Je hebt nog geen klas. Maak eerst een klas aan via de klas-kiezer in de header of bij Beurtstokjes.
+              </p>
+            </div>
+          ) : leerlingen.length > 0 ? (
+            <div className="rounded-2xl border border-border bg-background/60 px-4 py-3">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{leerlingen.length} leerlingen</span> uit {activeClass.name}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-border bg-background/60 px-4 py-3">
+              <p className="text-xs text-muted-foreground">
+                Nog geen leerlingen in {activeClass.name}. Voeg ze toe via Beurtstokjes / klasbeheer.
               </p>
             </div>
           )}
@@ -412,7 +430,8 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
 
           <button
             onClick={addTafel}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-background/60 p-4 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5"
+            disabled={!activeClass}
+            className="flex items-center gap-2 rounded-2xl border border-border bg-background/60 p-4 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5 disabled:opacity-40"
           >
             <Plus className="h-4 w-4 text-accent" />
             Losse tafel toevoegen
@@ -493,13 +512,15 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
         <div className="shrink-0 border-t border-border p-4 flex flex-col gap-2">
           <button
             onClick={rotateAll}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background/60 p-3 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5"
+            disabled={!activeClass}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background/60 p-3 text-sm font-semibold transition-smooth hover:border-accent hover:bg-accent/5 disabled:opacity-40"
           >
             <RotateCw className="h-4 w-4" /> Alle tafels draaien
           </button>
           <button
             onClick={() => { setTafels([]); setSelectedId(null); }}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50/50 p-3 text-sm font-semibold text-red-500 transition-smooth hover:bg-red-100 hover:border-red-400"
+            disabled={!activeClass}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50/50 p-3 text-sm font-semibold text-red-500 transition-smooth hover:bg-red-100 hover:border-red-400 disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" /> Alle tafels verwijderen
           </button>
@@ -512,12 +533,18 @@ const PlaatsenTool = ({ onClose }: { onClose: () => void }) => {
         className="relative flex-1 overflow-hidden"
         onClick={() => setSelectedId(null)}
       >
-        {loading && (
+        {klasLoading || loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-muted-foreground">Indeling laden…</p>
+            <p className="text-muted-foreground">{klasLoading ? "Klas laden…" : "Indeling laden…"}</p>
           </div>
-        )}
-        {!loading && svgSize.w > 0 && (
+        ) : !activeClass ? (
+          <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
+            <p className="text-muted-foreground">
+              Maak eerst een klas aan om een plaatsindeling te kunnen maken.
+            </p>
+          </div>
+        ) : null}
+        {!klasLoading && !loading && activeClass && svgSize.w > 0 && (
           <svg width={svgSize.w} height={svgSize.h} style={{ display: "block" }}>
             <defs>
               <clipPath id="plaatsen-room-clip">

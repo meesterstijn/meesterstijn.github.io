@@ -1,41 +1,40 @@
 import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Plus, Trash2, Shuffle, Settings, ChevronLeft, RotateCw } from "lucide-react";
+import { Trash2, Shuffle, RotateCw, Settings } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
+import { useClasses, type Student } from "@/context/ClassContext";
+import { TaskManagerPanel, fetchTasks, type Taak } from "@/components/TaskManagerPanel";
 
+// taskId -> student_id[]
 type Assignments = Record<string, string[]>;
 
-const fetchData = async (): Promise<{ leerlingen: string[]; assignments: Assignments }> => {
-  try {
-    const { data } = await supabase.from("taakjes").select("leerlingen,assignments").eq("id", 1).single();
-    const raw = data?.assignments ?? {};
-    const assignments: Assignments = {};
-    for (const [key, val] of Object.entries(raw)) {
-      assignments[key] = Array.isArray(val) ? (val as string[]) : typeof val === "string" ? [val] : [];
-    }
-    return { leerlingen: data?.leerlingen ?? [], assignments };
-  } catch {
-    return { leerlingen: [], assignments: {} };
+const fetchAssignments = async (classId: string): Promise<Assignments> => {
+  const { data } = await supabase.from("task_assignments").select("task_id,student_id").eq("class_id", classId);
+  const assignments: Assignments = {};
+  for (const row of data ?? []) {
+    assignments[row.task_id] = [...(assignments[row.task_id] ?? []), row.student_id];
   }
+  return assignments;
 };
 
-const patch = async (body: object) =>
-  supabase.from("taakjes").upsert({ id: 1, ...body });
+// Eén leerling naar een taak (ver)plaatsen — dankzij de unique constraint op
+// student_id werkt upsert zowel voor een nieuwe toewijzing als een verplaatsing.
+const assignStudent = async (classId: string, studentId: string, taskId: string) => {
+  await supabase.from("task_assignments").upsert(
+    { class_id: classId, student_id: studentId, task_id: taskId },
+    { onConflict: "student_id" }
+  );
+};
 
-type Taak = { id: string; emoji: string; naam: string; desc: string };
+const clearAssignments = async (classId: string) => {
+  await supabase.from("task_assignments").delete().eq("class_id", classId);
+};
 
-const TAKEN: Taak[] = [
-  { id: "uitdeler",   emoji: "📋", naam: "Uitdelers",         desc: "Deelt materiaal uit aan de klas" },
-  { id: "afval",      emoji: "🗑️", naam: "Afvalwacht",        desc: "Gooit het afval weg na de les" },
-  { id: "stoelen",    emoji: "🪑", naam: "Stoelenzetter",      desc: "Zet stoelen op tafel aan het einde" },
-  { id: "computer",   emoji: "💻", naam: "Chromebookdienst",   desc: "Haal en ruim de Chromebooks op" },
-  { id: "plant",      emoji: "🌱", naam: "Groene vingers",     desc: "Geeft water aan de klasplant" },
-  { id: "opruimen",   emoji: "🧹", naam: "Veegdienst",         desc: "Ruimt de klas op na de les" },
-  { id: "helpende",   emoji: "🤝", naam: "Helpende hand",      desc: "Helpt klasgenoten die vastlopen" },
-  { id: "tafels",     emoji: "🪑", naam: "Tafelrechtzetter",   desc: "Zet tafels recht aan het einde van de dag" },
-  { id: "ramen",      emoji: "🪟", naam: "Ramen",              desc: "Doet de ramen open en dicht" },
-];
+const bulkAssign = async (classId: string, rows: { student_id: string; task_id: string }[]) => {
+  await clearAssignments(classId);
+  if (rows.length > 0) await supabase.from("task_assignments").insert(rows.map(r => ({ ...r, class_id: classId })));
+};
 
 const CHIP_COLORS = [
   "bg-accent/20 text-accent border-accent/40",
@@ -55,238 +54,205 @@ const shuffleArr = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-type Selected = { taakId: string; naam: string };
-type DragSrc  = { taakId: string; naam: string };
+type Selected = { taakId: string; studentId: string };
+type DragSrc  = { taakId: string; studentId: string };
 
 const Taakjes = () => {
-  const [leerlingen, setLeerlingen]   = useState<string[]>([]);
+  const { activeClass, activeClassId, activeStudents, loading: klasLoading } = useClasses();
+
+  const [tasks, setTasks]             = useState<Taak[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [beheerOpen, setBeheerOpen]   = useState(false);
   const [assignments, setAssignments] = useState<Assignments>({});
-  const [mode, setMode]               = useState<"taken" | "beheer">("taken");
-  const [nieuwNaam, setNieuwNaam]     = useState("");
+  const [loading, setLoading]         = useState(true);
   const [dragSrc, setDragSrc]         = useState<DragSrc | null>(null);
   const [dragOver, setDragOver]       = useState<string | null>(null);
   const [selected, setSelected]       = useState<Selected | null>(null);
-  const [loading, setLoading]         = useState(true);
 
+  // Taken zijn algemeen (niet per klas) — één keer laden, los van de actieve klas.
   useEffect(() => {
-    fetchData().then(d => {
-      setLeerlingen(d.leerlingen);
-      setAssignments(d.assignments);
-      setLoading(false);
-    });
+    fetchTasks().then(t => { setTasks(t); setTasksLoading(false); });
   }, []);
 
-  const saveLeerlingen = (namen: string[]) => {
-    setLeerlingen(namen);
-    patch({ leerlingen: namen });
-  };
+  // Taakverdeling laden zodra de actieve klas bekend is — en opnieuw bij elke klaswissel.
+  // Tijdelijke UI-state (selectie/drag) hoort niet bij de vorige klas, dus die resetten we mee.
+  useEffect(() => {
+    setSelected(null);
+    setDragSrc(null);
+    setDragOver(null);
+    if (!activeClassId) { setAssignments({}); setLoading(false); return; }
+    setLoading(true);
+    fetchAssignments(activeClassId).then(a => { setAssignments(a); setLoading(false); });
+  }, [activeClassId]);
 
-  const saveAssignments = (ass: Assignments) => {
-    setAssignments(ass);
-    patch({ assignments: ass });
-  };
+  const studentById = (id: string): Student | undefined => activeStudents.find(s => s.id === id);
 
-  // Move one student from one task to another
-  const move = (naam: string, fromId: string, toId: string) => {
-    if (fromId === toId) return;
-    const next = { ...assignments };
-    next[fromId] = (next[fromId] ?? []).filter(n => n !== naam);
-    if (next[fromId].length === 0) delete next[fromId];
-    next[toId] = [...(next[toId] ?? []), naam];
-    saveAssignments(next);
-  };
-
-  const addLeerling = () => {
-    const naam = nieuwNaam.trim();
-    if (!naam || leerlingen.includes(naam)) return;
-    saveLeerlingen([...leerlingen, naam]);
-    setNieuwNaam("");
-  };
-
-  const removeLeerling = (naam: string) => {
-    saveLeerlingen(leerlingen.filter(l => l !== naam));
-    const next = { ...assignments };
-    for (const key of Object.keys(next)) {
-      next[key] = next[key].filter(n => n !== naam);
-      if (next[key].length === 0) delete next[key];
-    }
-    saveAssignments(next);
+  const move = (studentId: string, fromId: string, toId: string) => {
+    if (fromId === toId || !activeClassId) return;
+    setAssignments(prev => {
+      const next = { ...prev };
+      next[fromId] = (next[fromId] ?? []).filter(id => id !== studentId);
+      if (next[fromId].length === 0) delete next[fromId];
+      next[toId] = [...(next[toId] ?? []), studentId];
+      return next;
+    });
+    assignStudent(activeClassId, studentId, toId);
   };
 
   const autoVerdelen = () => {
-    const shuffled = shuffleArr(leerlingen);
+    if (!activeClassId || activeStudents.length === 0 || tasks.length === 0) return;
+    const shuffled = shuffleArr(activeStudents);
     const next: Assignments = {};
-    shuffled.forEach((naam, i) => {
-      const id = TAKEN[i % TAKEN.length].id;
-      next[id] = [...(next[id] ?? []), naam];
+    const rows: { student_id: string; task_id: string }[] = [];
+    shuffled.forEach((student, i) => {
+      const taakId = tasks[i % tasks.length].id;
+      next[taakId] = [...(next[taakId] ?? []), student.id];
+      rows.push({ student_id: student.id, task_id: taakId });
     });
-    saveAssignments(next);
+    setAssignments(next);
     setSelected(null);
+    bulkAssign(activeClassId, rows);
   };
 
   const verschuif = () => {
+    if (!activeClassId || tasks.length === 0) return;
     const next: Assignments = {};
-    TAKEN.forEach((taak, i) => {
-      const namen = assignments[taak.id];
-      if (namen?.length) {
-        const volgendId = TAKEN[(i + 1) % TAKEN.length].id;
-        next[volgendId] = [...(next[volgendId] ?? []), ...namen];
+    const rows: { student_id: string; task_id: string }[] = [];
+    tasks.forEach((taak, i) => {
+      const ids = assignments[taak.id];
+      if (ids?.length) {
+        const volgendId = tasks[(i + 1) % tasks.length].id;
+        next[volgendId] = [...(next[volgendId] ?? []), ...ids];
+        ids.forEach(studentId => rows.push({ student_id: studentId, task_id: volgendId }));
       }
     });
-    saveAssignments(next);
+    setAssignments(next);
     setSelected(null);
+    bulkAssign(activeClassId, rows);
+  };
+
+  const wisTaakverdeling = () => {
+    if (!activeClassId) return;
+    setAssignments({});
+    setSelected(null);
+    clearAssignments(activeClassId);
   };
 
   // Drag handlers
-  const handleDragStart = (e: React.DragEvent, taakId: string, naam: string) => {
-    setDragSrc({ taakId, naam });
+  const handleDragStart = (e: React.DragEvent, taakId: string, studentId: string) => {
+    setDragSrc({ taakId, studentId });
     setSelected(null);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
-    if (dragSrc && dragSrc.taakId !== targetId) move(dragSrc.naam, dragSrc.taakId, targetId);
+    if (dragSrc && dragSrc.taakId !== targetId) move(dragSrc.studentId, dragSrc.taakId, targetId);
     setDragSrc(null);
     setDragOver(null);
   };
 
   // Tap handlers (touch / smartboard)
-  const handleChipTap = (e: React.MouseEvent, taakId: string, naam: string) => {
+  const handleChipTap = (e: React.MouseEvent, taakId: string, studentId: string) => {
     e.stopPropagation();
-    if (selected?.taakId === taakId && selected?.naam === naam) { setSelected(null); return; }
-    if (selected) { move(selected.naam, selected.taakId, taakId); setSelected(null); return; }
-    setSelected({ taakId, naam });
+    if (selected?.taakId === taakId && selected?.studentId === studentId) { setSelected(null); return; }
+    if (selected) { move(selected.studentId, selected.taakId, taakId); setSelected(null); return; }
+    setSelected({ taakId, studentId });
   };
 
   const handleCardTap = (taakId: string) => {
     if (selected && selected.taakId !== taakId) {
-      move(selected.naam, selected.taakId, taakId);
+      move(selected.studentId, selected.taakId, taakId);
       setSelected(null);
     }
   };
 
-  const chipColor = (naam: string) =>
-    CHIP_COLORS[Math.abs(leerlingen.indexOf(naam)) % CHIP_COLORS.length];
+  const chipColor = (studentId: string) =>
+    CHIP_COLORS[Math.max(0, activeStudents.findIndex(s => s.id === studentId)) % CHIP_COLORS.length];
+
+  const bezig = klasLoading || loading || tasksLoading;
+  const heeftToewijzingen = Object.keys(assignments).length > 0;
 
   return (
     <div className="min-h-screen bg-paper bg-warm" onClick={() => setSelected(null)}>
       <SiteHeader />
       <main className="container py-10 md:py-14" onClick={e => e.stopPropagation()}>
-        {loading ? <p className="text-muted-foreground">Laden…</p> : <>
+        {bezig ? <p className="text-muted-foreground">Laden…</p> : <>
 
         {/* Header */}
         <div className="mb-8 animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">De klas</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              {activeClass ? activeClass.name : "De klas"}
+            </p>
             <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Taakjes</h1>
             <p className="mt-3 text-muted-foreground">
-              {mode === "taken"
-                ? "Sleep een naam naar een andere taak, of tik hem aan en tik de doelkaart."
-                : "Voeg leerlingen toe en verdeel ze over de taken."}
+              Sleep een naam naar een andere taak, of tik hem aan en tik de doelkaart.
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:flex-nowrap sm:gap-3">
-            {mode === "taken" ? (
+            {activeClass && (
               <>
                 <button
                   onClick={verschuif}
-                  disabled={Object.keys(assignments).length === 0}
+                  disabled={!heeftToewijzingen}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40 sm:flex-none"
                 >
                   <RotateCw className="h-4 w-4" /> Doorschuiven
                 </button>
                 <button
                   onClick={autoVerdelen}
-                  disabled={leerlingen.length === 0}
+                  disabled={activeStudents.length === 0 || tasks.length === 0}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent disabled:opacity-40 sm:flex-none"
                 >
                   <Shuffle className="h-4 w-4" /> Willekeurig verdelen
                 </button>
                 <button
-                  onClick={() => { setMode("beheer"); setSelected(null); }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90 sm:w-auto"
+                  onClick={wisTaakverdeling}
+                  disabled={!heeftToewijzingen}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-smooth hover:border-destructive hover:text-destructive disabled:opacity-40 sm:flex-none"
                 >
-                  <Settings className="h-4 w-4" /> Leerlingen
+                  <Trash2 className="h-4 w-4" /> Taakverdeling wissen
                 </button>
               </>
-            ) : (
-              <button
-                onClick={() => setMode("taken")}
-                className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent"
-              >
-                <ChevronLeft className="h-4 w-4" /> Terug naar taken
-              </button>
             )}
+            <button
+              onClick={() => setBeheerOpen(true)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-smooth hover:border-accent sm:flex-none"
+            >
+              <Settings className="h-4 w-4" /> Taken beheren
+            </button>
           </div>
         </div>
 
-        {/* Beheer */}
-        {mode === "beheer" && (
-          <div className="animate-fade-up max-w-2xl">
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                  Leerlingen — {leerlingen.length} namen
-                </p>
-                {leerlingen.length > 0 && (
-                  <button
-                    onClick={() => { saveLeerlingen([]); saveAssignments({}); }}
-                    className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-smooth hover:border-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Alles wissen
-                  </button>
-                )}
-              </div>
-              <div className="flex gap-2 mb-5">
-                <input
-                  value={nieuwNaam}
-                  onChange={e => setNieuwNaam(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && addLeerling()}
-                  placeholder="Naam leerling…"
-                  autoFocus
-                  className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                />
-                <button
-                  onClick={addLeerling}
-                  className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              {leerlingen.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nog geen leerlingen toegevoegd.</p>
-              )}
-              <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {leerlingen.map((naam, i) => (
-                  <li key={naam} className="flex items-center gap-1.5">
-                    <div className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium truncate ${CHIP_COLORS[i % CHIP_COLORS.length]}`}>
-                      {naam}
-                    </div>
-                    <button
-                      onClick={() => removeLeerling(naam)}
-                      className="shrink-0 text-muted-foreground transition-smooth hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {!activeClass ? (
+          <div className="animate-fade-up rounded-3xl border border-border bg-card p-8 text-center shadow-soft">
+            <p className="text-muted-foreground">
+              Je hebt nog geen klas. Maak eerst een klas aan via de klas-kiezer in de header of bij Beurtstokjes.
+            </p>
           </div>
-        )}
-
-        {/* Taken grid */}
-        {mode === "taken" && (
+        ) : activeStudents.length === 0 ? (
+          <div className="animate-fade-up rounded-3xl border border-border bg-card p-8 text-center shadow-soft">
+            <p className="text-muted-foreground">
+              Nog geen leerlingen in {activeClass.name}. Voeg ze toe via Beurtstokjes / klasbeheer.
+            </p>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="animate-fade-up rounded-3xl border border-border bg-card p-8 text-center shadow-soft">
+            <p className="text-muted-foreground">
+              Nog geen taken. Voeg de eerste toe via "Taken beheren" rechtsboven.
+            </p>
+          </div>
+        ) : (
           <>
             {selected && (
               <div className="mb-4 animate-fade-up rounded-2xl border border-accent bg-accent/10 px-4 py-3 text-sm font-medium text-accent">
-                Tik op een taakkaart om <strong>{selected.naam}</strong> daarnaar te verplaatsen. Tik opnieuw op de naam om te deselecteren.
+                Tik op een taakkaart om <strong>{studentById(selected.studentId)?.name}</strong> daarnaar te verplaatsen. Tik opnieuw op de naam om te deselecteren.
               </div>
             )}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 animate-fade-up">
-              {TAKEN.map(taak => {
-                const namen   = Array.isArray(assignments[taak.id]) ? assignments[taak.id] : [];
+              {tasks.map(taak => {
+                const ids     = assignments[taak.id] ?? [];
                 const isOver  = dragOver === taak.id;
                 const isTarget = selected !== null && selected.taakId !== taak.id;
 
@@ -298,7 +264,7 @@ const Taakjes = () => {
                     onDragLeave={() => setDragOver(null)}
                     onDrop={e => handleDrop(e, taak.id)}
                     className={`flex flex-col rounded-3xl border-2 p-5 shadow-soft transition-smooth ${
-                      isOver || (isTarget && namen.length > 0)
+                      isOver || (isTarget && ids.length > 0)
                         ? "border-accent bg-accent/5 scale-[1.02] cursor-pointer"
                         : isTarget
                         ? "border-dashed border-accent/60 bg-accent/5 cursor-pointer"
@@ -310,24 +276,26 @@ const Taakjes = () => {
                     <p className="mt-1 text-xs text-muted-foreground leading-snug">{taak.desc}</p>
 
                     <div className="mt-4 flex flex-col gap-1.5">
-                      {namen.map(naam => {
-                        const isChipSelected = selected?.taakId === taak.id && selected?.naam === naam;
+                      {ids.map(studentId => {
+                        const student = studentById(studentId);
+                        if (!student) return null;
+                        const isChipSelected = selected?.taakId === taak.id && selected?.studentId === studentId;
                         return (
                           <div
-                            key={naam}
+                            key={studentId}
                             draggable
-                            onDragStart={e => handleDragStart(e, taak.id, naam)}
+                            onDragStart={e => handleDragStart(e, taak.id, studentId)}
                             onDragEnd={() => { setDragSrc(null); setDragOver(null); }}
-                            onClick={e => handleChipTap(e, taak.id, naam)}
-                            className={`cursor-grab active:cursor-grabbing rounded-xl border px-3 py-1.5 text-sm font-semibold text-center select-none transition-smooth ${chipColor(naam)} ${
+                            onClick={e => handleChipTap(e, taak.id, studentId)}
+                            className={`cursor-grab active:cursor-grabbing rounded-xl border px-3 py-1.5 text-sm font-semibold text-center select-none transition-smooth ${chipColor(studentId)} ${
                               isChipSelected ? "ring-2 ring-accent ring-offset-1 scale-105 shadow-md" : "hover:scale-105"
                             }`}
                           >
-                            {naam}
+                            {student.name}
                           </div>
                         );
                       })}
-                      {namen.length === 0 && (
+                      {ids.length === 0 && (
                         <div className={`rounded-xl border-2 border-dashed px-3 py-1.5 text-center text-xs transition-smooth ${
                           isTarget ? "border-accent/60 text-accent" : "border-border text-muted-foreground"
                         }`}>
@@ -347,6 +315,10 @@ const Taakjes = () => {
         </footer>
         </>}
       </main>
+
+      {beheerOpen && (
+        <TaskManagerPanel tasks={tasks} onChange={setTasks} onClose={() => setBeheerOpen(false)} />
+      )}
     </div>
   );
 };
