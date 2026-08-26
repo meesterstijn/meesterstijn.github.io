@@ -3,7 +3,12 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Clock, Pencil, Plus, Trash2, Check, X } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
-const ROW_ID = 1;
+import { useClasses } from "@/context/ClassContext";
+import { TimeField } from "@/components/TimeField";
+
+// Eenmalige migratie: de oude, niet-klasgebonden planning (rij id 1, vóór de
+// class_id-kolom) wordt overgenomen in de eerste klas die na deze update wordt geopend.
+const PLANNING_MIGRATION_KEY = "ms-planning-migrated";
 
 type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
 type Block = { id: string; time: string; title: string; subject: string; tone: Tone };
@@ -55,37 +60,55 @@ const toneLabels: Record<Tone, string> = {
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 
-async function loadFromSupabase(): Promise<Day[] | null> {
+async function loadFromSupabase(classId: string): Promise<Day[] | null> {
   try {
-    const { data } = await supabase.from("planning").select("data").eq("id", ROW_ID).single();
+    const { data } = await supabase.from("planning").select("data").eq("class_id", classId).maybeSingle();
     if (data?.data) return JSON.parse(data.data);
+
+    if (!localStorage.getItem(PLANNING_MIGRATION_KEY)) {
+      localStorage.setItem(PLANNING_MIGRATION_KEY, "1");
+      const { data: legacy } = await supabase.from("planning").select("data").eq("id", 1).maybeSingle();
+      if (legacy?.data) {
+        const week = JSON.parse(legacy.data);
+        await saveToSupabase(classId, week);
+        return week;
+      }
+    }
   } catch {}
   return null;
 }
 
-async function saveToSupabase(week: Day[]) {
-  await supabase.from("planning").upsert({ id: ROW_ID, data: JSON.stringify(week) });
+async function saveToSupabase(classId: string, week: Day[]): Promise<string | null> {
+  const { error } = await supabase.from("planning").upsert({ class_id: classId, data: JSON.stringify(week) }, { onConflict: "class_id" });
+  return error ? error.message : null;
 }
 
 const Planning = () => {
+  const { activeClassId, activeClass, loading: klasLoading } = useClasses();
   const [week, setWeek] = useState<Day[]>(defaultWeek);
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; blockId: string } | null>(null);
   const [editVal, setEditVal] = useState<Block | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadFromSupabase().then(data => {
-      if (data) setWeek(data);
+    if (klasLoading) return;
+    if (!activeClassId) { setWeek(defaultWeek); setLoading(false); return; }
+    setLoading(true);
+    loadFromSupabase(activeClassId).then(data => {
+      setWeek(data ?? defaultWeek);
       setLoading(false);
     });
-  }, []);
+  }, [activeClassId, klasLoading]);
 
   const saveWeek = async (newWeek: Day[]) => {
     setWeek(newWeek);
+    if (!activeClassId) return;
     setSaving(true);
-    await saveToSupabase(newWeek);
+    const err = await saveToSupabase(activeClassId, newWeek);
+    setSaveError(err);
     setSaving(false);
   };
 
@@ -135,6 +158,7 @@ const Planning = () => {
           </div>
           <div className="mt-4 flex items-center gap-2">
             {saving && <span className="text-xs text-muted-foreground">Opslaan…</span>}
+            {saveError && <span className="text-xs text-red-500">⚠ Opslaan mislukt: {saveError}</span>}
             {!unlocked ? (
               <button
                 onClick={() => setUnlocked(true)}
@@ -153,8 +177,13 @@ const Planning = () => {
           </div>
         </div>
 
-        {loading && (
+        {(klasLoading || loading) && (
           <p className="text-sm text-muted-foreground mb-6">Planning laden…</p>
+        )}
+        {!klasLoading && !activeClass && (
+          <p className="text-sm text-muted-foreground mb-6">
+            Maak eerst een klas aan via de klas-kiezer in de header om een planning te kunnen opslaan.
+          </p>
         )}
 
         {/* Bewerkscherm */}
@@ -165,8 +194,9 @@ const Planning = () => {
               <div className="space-y-3">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted-foreground">Tijd</label>
-                  <input type="time" value={editVal.time} onChange={e => setEditVal({ ...editVal, time: e.target.value })}
-                    className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
+                  <div className="w-fit rounded-xl border border-border bg-background px-4 py-2.5 text-sm">
+                    <TimeField value={editVal.time} onChange={v => setEditVal({ ...editVal, time: v })} />
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted-foreground">Titel</label>
@@ -202,7 +232,7 @@ const Planning = () => {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        {activeClass && <div className="grid gap-6 lg:grid-cols-3">
           {week.map((d, dayIdx) => (
             <section key={d.day} className="animate-fade-up rounded-3xl border border-border bg-card p-5 shadow-soft" style={{ animationDelay: `${dayIdx * 70}ms` }}>
               <header className="mb-4 border-b border-border pb-3">
@@ -240,7 +270,7 @@ const Planning = () => {
               )}
             </section>
           ))}
-        </div>
+        </div>}
       </main>
     </div>
   );

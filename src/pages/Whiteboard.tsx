@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { createPortal } from "react-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Sprout, Pen, Highlighter } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Wrench, Hand, Sprout, Pen, Highlighter } from "lucide-react";
 import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
 import { BeurtstokjesCompact } from "@/components/BeurtstokjesCompact";
 
@@ -694,7 +694,7 @@ const Whiteboard = () => {
   const [showTimer, setShowTimer] = useState(false);
   const [showTekst, setShowTekst] = useState(false);
   const [showFoto, setShowFoto] = useState(false);
-  const [fotoUrl, setFotoUrl] = useState<string>("/edi1.webp");
+  const fotoUrl = "/edi1.webp";
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [showOppervlakte, setShowOppervlakte] = useState(false);
@@ -702,22 +702,14 @@ const Whiteboard = () => {
   const [showGeld, setShowGeld] = useState(false);
   const [showBeurtstokjes, setShowBeurtstokjes] = useState(false);
   const [showVerhouding, setShowVerhouding] = useState(false);
-  const [wijzerAan, setWijzerAan] = useState(false);
-  const [wijzerPos, setWijzerPos] = useState({ x: 50, y: 50 });
-  const fotoFileRef = useRef<HTMLInputElement>(null);
-  const fotoAreaRef = useRef<HTMLDivElement>(null);
+  const [fotoPos, setFotoPos] = useState({ x: 60, y: 60 });
 
-  const beginWijzerDrag = (clientX: number, clientY: number) => {
+  const beginFotoDrag = (clientX: number, clientY: number) => {
+    const start = { mx: clientX, my: clientY, ox: fotoPos.x, oy: fotoPos.y };
     const onMove = (e: MouseEvent | TouchEvent) => {
-      const area = fotoAreaRef.current;
-      if (!area) return;
-      const rect = area.getBoundingClientRect();
       const cx = "touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
       const cy = "touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
-      setWijzerPos({
-        x: Math.max(0, Math.min(100, ((cx - rect.left) / rect.width) * 100)),
-        y: Math.max(0, Math.min(100, ((cy - rect.top) / rect.height) * 100)),
-      });
+      setFotoPos({ x: start.ox + cx - start.mx, y: start.oy + cy - start.my });
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
@@ -729,7 +721,6 @@ const Whiteboard = () => {
     window.addEventListener("mouseup", onUp);
     window.addEventListener("touchmove", onMove);
     window.addEventListener("touchend", onUp);
-    onMove({ clientX, clientY } as MouseEvent);
   };
   const linedRef = useRef(false);
   const drawing = useRef(false);
@@ -872,7 +863,7 @@ const Whiteboard = () => {
     <div className="overflow-hidden bg-paper bg-warm flex flex-col" style={{ height: "100dvh" }}>
       <SiteHeader />
 
-      <main className="container pt-6 pb-20 flex flex-col flex-1 overflow-hidden">
+      <main className="px-4 md:px-6 pt-6 pb-20 flex flex-col flex-1 overflow-hidden">
         {/* Canvas wrapper — position:relative so overlays can be positioned inside */}
         <div
           className="animate-fade-up flex-1 rounded-3xl border border-border shadow-soft min-h-0"
@@ -946,49 +937,19 @@ const Whiteboard = () => {
           )}
 
           {showFoto && (
-            <DraggableWidget title="Foto" initialPos={{ x: 60, y: 60 }} onClose={() => { setShowFoto(false); setWijzerAan(false); }}>
-              <div style={{ width: 600 }}>
-                <div
-                  ref={fotoAreaRef}
-                  className="relative overflow-hidden bg-muted/10"
-                  style={{ height: 420, cursor: wijzerAan ? "crosshair" : "default" }}
-                  onMouseDown={wijzerAan ? e => { e.stopPropagation(); beginWijzerDrag(e.clientX, e.clientY); } : undefined}
-                  onTouchStart={wijzerAan ? e => { e.stopPropagation(); beginWijzerDrag(e.touches[0].clientX, e.touches[0].clientY); } : undefined}
-                >
-                  <img src={fotoUrl} alt="" className="h-full w-full object-contain" />
-                  {wijzerAan && (
-                    <div style={{ position: "absolute", left: `${wijzerPos.x}%`, top: `${wijzerPos.y}%`, transform: "translate(-50%, -50%)", pointerEvents: "none" }}>
-                      <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "#EF4444", boxShadow: "0 0 0 4px white, 0 0 0 6px #EF4444", animation: "pulse 1.5s infinite" }} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
-                  <button
-                    onClick={() => setFotoUrl("/edi1.webp")}
-                    className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent ${fotoUrl === "/edi1.webp" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-                  >
-                    EDI 1
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setWijzerAan(v => !v)}
-                      className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent ${wijzerAan ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-                    >
-                      📍 Wijzer
-                    </button>
-                    <button onClick={() => fotoFileRef.current?.click()} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-medium transition-smooth hover:border-accent">
-                      <Upload className="h-3.5 w-3.5" /> Ander
-                    </button>
-                  </div>
-                </div>
+            <div style={{ position: "absolute", left: fotoPos.x, top: fotoPos.y, zIndex: 20, userSelect: "none" }}>
+              <div
+                style={{ display: "inline-block", cursor: "grab" }}
+                onMouseDown={e => { e.stopPropagation(); beginFotoDrag(e.clientX, e.clientY); }}
+                onTouchStart={e => { e.stopPropagation(); beginFotoDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+              >
+                <img src={fotoUrl} alt="" style={{ maxWidth: 600, maxHeight: 420, display: "block" }} draggable={false} />
               </div>
-            </DraggableWidget>
+            </div>
           )}
 
         </div>
       </main>
-
-      <input ref={fotoFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) setFotoUrl(URL.createObjectURL(f)); }} />
 
       {/* Toolbar — fixed aan de onderkant, altijd zichtbaar */}
       <div
@@ -1052,10 +1013,10 @@ const Whiteboard = () => {
         {/* Eraser */}
         <button
           onClick={() => setTool(t => t === "eraser" ? "pen" : "eraser")}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${tool === "eraser" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          className={`shrink-0 flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${tool === "eraser" ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ width: 36, height: 36 }}
         >
           <Eraser className="h-4 w-4" />
-          Gum
         </button>
 
         <div className="h-6 w-px shrink-0 bg-border" />
@@ -1063,20 +1024,19 @@ const Whiteboard = () => {
         {/* Clear */}
         <button
           onClick={clear}
-          className="shrink-0 flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-medium transition-smooth"
-          style={{ color: "#EEA081" }}
+          className="shrink-0 flex items-center justify-center rounded-xl border border-border transition-smooth"
+          style={{ color: "#EEA081", width: 36, height: 36 }}
         >
           <Trash2 className="h-4 w-4" />
-          Leegmaken
         </button>
 
         {/* Lined */}
         <button
           onClick={toggleLined}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${lined ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          className={`shrink-0 flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${lined ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          style={{ width: 36, height: 36 }}
         >
           <BookOpen className="h-4 w-4" />
-          Schrift
         </button>
 
         <div className="h-6 w-px shrink-0 bg-border" />
@@ -1121,13 +1081,13 @@ const Whiteboard = () => {
           <Hand className="h-4 w-4" />
         </button>
 
-        {/* Foto toggle */}
+        {/* EDI toggle */}
         <button
           onClick={() => setShowFoto(v => !v)}
           className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-smooth hover:border-accent ${showFoto ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
         >
           <ImageIcon className="h-4 w-4" />
-          Foto
+          EDI
         </button>
 
         {/* Tools toggle */}
