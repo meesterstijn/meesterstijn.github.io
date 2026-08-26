@@ -40,7 +40,7 @@ const weerTekst = (code: number) => {
 
 const jasNodig = (temp: number, code: number) => !(temp >= 18 && code <= 1);
 const jasTekst = (temp: number) =>
-  temp >= 16
+  temp >= 18
     ? "Neem je jas mee naar buiten. Je kunt hem uittrekken als je het warm krijgt."
     : "Neem je jas mee naar buiten.";
 
@@ -124,8 +124,8 @@ const Weer = () => {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-card/60 px-5 py-4 text-sm text-muted-foreground leading-relaxed">
-                  Geen jas nodig als het <strong>22°C of warmer</strong> is met heldere lucht. Anders: jas mee
-                  {weer.temp >= 16 ? " — buiten kun je hem uittrekken als je het warm krijgt." : "."}
+                  Geen jas nodig als het <strong>18°C of warmer</strong> is met heldere lucht. Anders: jas mee
+                  {weer.temp >= 18 ? " — buiten kun je hem uittrekken als je het warm krijgt." : "."}
                 </div>
               </div>
 
