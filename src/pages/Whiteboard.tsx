@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { createPortal } from "react-dom";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Sprout } from "lucide-react";
+import { Eraser, Trash2, BookOpen, Play, Pause, RotateCcw, Plus, Minus, Hourglass, X, Type, Image as ImageIcon, Upload, Wrench, Hand, Sprout, Pen, Highlighter } from "lucide-react";
 import { PlantSVG, randomVariant, type PlantVariant } from "@/components/PlantSVG";
 import { BeurtstokjesCompact } from "@/components/BeurtstokjesCompact";
 
@@ -20,15 +20,19 @@ const insertFlower = async (variant: number) => {
   await supabase.from("flowers").insert({ variant });
 };
 
-const COLORS = ["#4682B4", "#10B981", "#F49E4C", "#AB3428", "#7C3AED", "#000000", "#ffffff"];
-const SIZES = [3, 6, 12, 20];
+const PEN_COLORS = ["#4682B4", "#10B981", "#AB3428", "#000000"];
+const MARKER_COLORS = ["#FBBF24", "#10B981", "#4682B4", "#7C3AED"];
+const SIZES = [3, 10, 24];
+const MARKER_SIZE = 44;
+const MARKER_ALPHA = 0.3;
 const ERASER_RADIUS = 28;
 const LINE_SPACING = 52;
 const MARGIN_X = 180;
 
-type Tool = "pen" | "eraser";
+type DrawTool = "pen" | "marker";
+type Tool = DrawTool | "eraser";
 type Point = { x: number; y: number };
-type Stroke = { color: string; size: number; points: Point[] };
+type Stroke = { tool: DrawTool; color: string; size: number; points: Point[] };
 type Light = "rood" | "oranje" | "groen";
 
 const LIGHTS: { color: Light; bg: string; glow: string; label: string }[] = [
@@ -681,8 +685,10 @@ const VerhoudingContent = () => {
 const Whiteboard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>("pen");
-  const [color, setColor] = useState("#4682B4");
-  const [size, setSize] = useState(6);
+  const [penColor, setPenColor] = useState(PEN_COLORS[0]);
+  const [markerColor, setMarkerColor] = useState(MARKER_COLORS[0]);
+  const [size, setSize] = useState(SIZES[1]);
+  const activeColor = tool === "marker" ? markerColor : penColor;
   const [lined, setLinedState] = useState(false);
   const [showStoplicht, setShowStoplicht] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -751,7 +757,9 @@ const Whiteboard = () => {
       ctx.lineWidth = stroke.size;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.globalAlpha = stroke.tool === "marker" ? MARKER_ALPHA : 1;
       ctx.stroke();
+      ctx.globalAlpha = 1;
     }
   };
 
@@ -803,7 +811,10 @@ const Whiteboard = () => {
     if (!canvas) return;
     drawing.current = true;
     const pos = getPos(e, canvas);
-    if (tool === "pen") currentStroke.current = { color, size, points: [pos] };
+    if (tool === "pen" || tool === "marker") {
+      const activeSize = tool === "marker" ? MARKER_SIZE : size;
+      currentStroke.current = { tool, color: activeColor, size: activeSize, points: [pos] };
+    }
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
@@ -814,18 +825,23 @@ const Whiteboard = () => {
     if (!ctx) return;
     const pos = getPos(e, canvas);
 
-    if (tool === "pen" && currentStroke.current) {
-      const pts = currentStroke.current.points;
-      const from = pts[pts.length - 1];
-      pts.push(pos);
+    if ((tool === "pen" || tool === "marker") && currentStroke.current) {
+      currentStroke.current.points.push(pos);
+      // Redraw the whole in-progress stroke as a single path each move, rather than
+      // stacking short overlapping segments — with a translucent marker, overlapping
+      // segments would otherwise compound alpha and make it look opaque instead of see-through.
+      redraw(ctx, canvas);
+      const s = currentStroke.current;
       ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = currentStroke.current.color;
-      ctx.lineWidth = currentStroke.current.size;
+      ctx.moveTo(s.points[0].x, s.points[0].y);
+      for (const p of s.points.slice(1)) ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.size;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.globalAlpha = s.tool === "marker" ? MARKER_ALPHA : 1;
       ctx.stroke();
+      ctx.globalAlpha = 1;
     } else if (tool === "eraser") {
       const before = strokes.current.length;
       strokes.current = strokes.current.filter(s => !strokeHit(s, pos, ERASER_RADIUS));
@@ -834,7 +850,7 @@ const Whiteboard = () => {
   };
 
   const stopDraw = () => {
-    if (tool === "pen" && currentStroke.current && currentStroke.current.points.length > 0) {
+    if ((tool === "pen" || tool === "marker") && currentStroke.current && currentStroke.current.points.length > 0) {
       strokes.current.push(currentStroke.current);
       saveStrokes();
     }
@@ -980,22 +996,24 @@ const Whiteboard = () => {
         style={{ paddingTop: "0.75rem", paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
       <div className="mx-auto flex w-fit items-center gap-3 px-4">
-        {/* Colors */}
-        <div className="flex gap-1.5 shrink-0">
-          {COLORS.map((c) => (
+        {/* Pen */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => setTool("pen")}
+            className={`flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${tool === "pen" ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+            style={{ width: 32, height: 32 }}
+          >
+            <Pen className="h-4 w-4" />
+          </button>
+          {PEN_COLORS.map((c) => (
             <button
               key={c}
-              onClick={() => { setColor(c); setTool("pen"); }}
+              onClick={() => { setPenColor(c); setTool("pen"); }}
               style={{ backgroundColor: c }}
-              className={`h-7 w-7 rounded-full border-2 transition-smooth hover:scale-110 ${color === c && tool === "pen" ? "border-primary scale-110" : "border-border"}`}
+              className={`h-7 w-7 rounded-full border-2 transition-smooth hover:scale-110 ${penColor === c && tool === "pen" ? "border-primary scale-110" : "border-border"}`}
             />
           ))}
-        </div>
-
-        <div className="h-6 w-px shrink-0 bg-border" />
-
-        {/* Sizes */}
-        <div className="flex shrink-0 items-center gap-2">
+          <div className="mx-0.5 h-6 w-px shrink-0 bg-border" />
           {SIZES.map((s) => (
             <button
               key={s}
@@ -1005,6 +1023,27 @@ const Whiteboard = () => {
             >
               <span style={{ width: Math.min(s, 28), height: Math.min(s, 28), borderRadius: "50%", backgroundColor: "#000000", display: "block" }} />
             </button>
+          ))}
+        </div>
+
+        <div className="h-6 w-px shrink-0 bg-border" />
+
+        {/* Marker */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => setTool("marker")}
+            className={`flex items-center justify-center rounded-xl border transition-smooth hover:border-accent ${tool === "marker" ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+            style={{ width: 32, height: 32 }}
+          >
+            <Highlighter className="h-4 w-4" />
+          </button>
+          {MARKER_COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => { setMarkerColor(c); setTool("marker"); }}
+              style={{ backgroundColor: c }}
+              className={`h-7 w-7 rounded-lg border-2 transition-smooth hover:scale-110 ${markerColor === c && tool === "marker" ? "border-primary scale-110" : "border-border"}`}
+            />
           ))}
         </div>
 
