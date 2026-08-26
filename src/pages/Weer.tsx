@@ -38,7 +38,7 @@ const weerTekst = (code: number) => {
   return "Onweer";
 };
 
-const jasNodig = (temp: number, code: number) => !(temp >= 22 && code <= 1);
+const jasNodig = (temp: number, code: number) => !(temp >= 18 && code <= 1);
 const jasTekst = (temp: number) =>
   temp >= 16
     ? "Neem je jas mee naar buiten. Je kunt hem uittrekken als je het warm krijgt."
