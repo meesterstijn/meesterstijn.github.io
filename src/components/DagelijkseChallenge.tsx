@@ -3,7 +3,7 @@ import { X, Shuffle, Star } from "lucide-react";
 
 type Challenge = { tekst: string; categorie: string; kleur: string };
 
-const CHALLENGES: Challenge[] = [
+export const CHALLENGES: Challenge[] = [
   { tekst: "Teken een dier in precies 60 seconden. Raad daarna elkaars tekeningen.", categorie: "Creatief", kleur: "bg-accent/10 text-accent border-accent/30" },
   { tekst: "Zeg de maanden van het jaar van achter naar voren.", categorie: "Taal", kleur: "bg-primary/10 text-primary border-primary/30" },
   { tekst: "Maak 10 jumping jacks, 5 kniebuigingen en 3 keer ronddraaien.", categorie: "Beweging", kleur: "bg-sage/10 text-sage border-sage/30" },
@@ -41,7 +41,7 @@ const CHALLENGES: Challenge[] = [
   { tekst: "Bedenk een slogan voor jouw klas van maximaal 5 woorden.", categorie: "Creatief", kleur: "bg-accent/10 text-accent border-accent/30" },
 ];
 
-const dagChallenge = (): number => {
+export const dagChallenge = (): number => {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const dag = Math.floor((now.getTime() - start.getTime()) / 86400000);

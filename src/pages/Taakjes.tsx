@@ -5,6 +5,8 @@ import { Trash2, Shuffle, RotateCw, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClasses, type Student } from "@/context/ClassContext";
 import { TaskManagerPanel, fetchTasks, type Taak } from "@/components/TaskManagerPanel";
+import { HistoryPanel } from "@/components/HistoryPanel";
+import { useHistorySnapshots, type HistorySnapshot } from "@/hooks/useHistorySnapshots";
 
 // taskId -> student_id[]
 type Assignments = Record<string, string[]>;
@@ -68,6 +70,7 @@ const Taakjes = () => {
   const [dragSrc, setDragSrc]         = useState<DragSrc | null>(null);
   const [dragOver, setDragOver]       = useState<string | null>(null);
   const [selected, setSelected]       = useState<Selected | null>(null);
+  const history = useHistorySnapshots<Assignments>(`taakjes-${activeClassId ?? "geen-klas"}`);
 
   // Taken zijn algemeen (niet per klas) — één keer laden, los van de actieve klas.
   useEffect(() => {
@@ -89,6 +92,7 @@ const Taakjes = () => {
 
   const move = (studentId: string, fromId: string, toId: string) => {
     if (fromId === toId || !activeClassId) return;
+    history.capture("Leerling verplaatst", assignments);
     setAssignments(prev => {
       const next = { ...prev };
       next[fromId] = (next[fromId] ?? []).filter(id => id !== studentId);
@@ -101,6 +105,7 @@ const Taakjes = () => {
 
   const autoVerdelen = () => {
     if (!activeClassId || activeStudents.length === 0 || tasks.length === 0) return;
+    history.capture("Vóór willekeurig verdelen", assignments);
     const shuffled = shuffleArr(activeStudents);
     const next: Assignments = {};
     const rows: { student_id: string; task_id: string }[] = [];
@@ -116,6 +121,7 @@ const Taakjes = () => {
 
   const verschuif = () => {
     if (!activeClassId || tasks.length === 0) return;
+    history.capture("Vóór doorschuiven", assignments);
     const next: Assignments = {};
     const rows: { student_id: string; task_id: string }[] = [];
     tasks.forEach((taak, i) => {
@@ -133,6 +139,7 @@ const Taakjes = () => {
 
   const wisTaakverdeling = () => {
     if (!activeClassId) return;
+    history.capture("Vóór taakverdeling wissen", assignments);
     setAssignments({});
     setSelected(null);
     clearAssignments(activeClassId);
@@ -173,6 +180,17 @@ const Taakjes = () => {
   const bezig = klasLoading || loading || tasksLoading;
   const heeftToewijzingen = Object.keys(assignments).length > 0;
 
+  const restoreAssignments = async (snapshot: HistorySnapshot<Assignments>) => {
+    if (!activeClassId) return;
+    history.capture("Vóór herstel", assignments);
+    const rows = Object.entries(snapshot.data).flatMap(([taskId, studentIds]) =>
+      studentIds.map(studentId => ({ student_id: studentId, task_id: taskId }))
+    );
+    await bulkAssign(activeClassId, rows);
+    setAssignments(snapshot.data);
+    setSelected(null);
+  };
+
   return (
     <div className="min-h-screen bg-paper bg-warm" onClick={() => setSelected(null)}>
       <SiteHeader />
@@ -191,6 +209,7 @@ const Taakjes = () => {
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:flex-nowrap sm:gap-3">
+            <HistoryPanel title="Taakverdeling" snapshots={history.snapshots} onRestore={restoreAssignments} onRemove={history.remove} onClear={history.clear} />
             {activeClass && (
               <>
                 <button

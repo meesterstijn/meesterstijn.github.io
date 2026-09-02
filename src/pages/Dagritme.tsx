@@ -5,14 +5,16 @@ import { Clock, Pencil, Plus, Trash2, Check, X, LayoutGrid, CalendarDays, Settin
 import { supabase } from "@/lib/supabase";
 import { useClasses } from "@/context/ClassContext";
 import { TimeField } from "@/components/TimeField";
+import { HistoryPanel } from "@/components/HistoryPanel";
+import { useHistorySnapshots, type HistorySnapshot } from "@/hooks/useHistorySnapshots";
 
 // Eenmalige migratie: het oude, niet-klasgebonden rooster (rij id 1, vóór de
 // class_id-kolom) wordt overgenomen in de eerste klas die na deze update wordt geopend.
 const DAGRITME_MIGRATION_KEY = "ms-dagritme-migrated";
 
-type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
-type Block = { id: string; time: string; title: string; subject: string; tone: Tone; les: string; lesdoelen: string };
-type Day = { day: string; blocks: Block[] };
+export type Tone = "coral" | "sage" | "amber" | "ink" | "cream";
+export type Block = { id: string; time: string; title: string; subject: string; tone: Tone; les: string; lesdoelen: string };
+export type Day = { day: string; blocks: Block[] };
 type View = "dag" | "week";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
@@ -53,7 +55,7 @@ const fmt = (d: Date) =>
 const MONTHS = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
 const fmtLong = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 
-const defaultWeek: Day[] = DAYS.map((day, i) => ({
+export const defaultWeek: Day[] = DAYS.map((day, i) => ({
   day,
   blocks: [
     { id: `${i}a`, time: "08:30", title: "Inloop",     subject: "", tone: "ink",   les: "", lesdoelen: "" },
@@ -117,7 +119,7 @@ const addMinutes = (time: string, mins: number): string => {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
 
-type Payload = { week: Day[]; vakken: VakOptie[] };
+export type Payload = { week: Day[]; vakken: VakOptie[] };
 
 // De data-kolom bevatte vroeger alleen het rooster (een kaal array). Ondersteun
 // die vorm nog bij het inlezen, maar sla voortaan altijd het object met vakken op.
@@ -127,7 +129,7 @@ const parsePayload = (raw: string): Payload => {
   return { week: normalize(parsed.week ?? []), vakken: parsed.vakken ?? DEFAULT_VAK_OPTIES };
 };
 
-async function loadFromSupabase(classId: string): Promise<Payload | null> {
+export async function loadDagritme(classId: string): Promise<Payload | null> {
   try {
     const { data } = await supabase.from("dagritme").select("data").eq("class_id", classId).maybeSingle();
     if (data?.data) return parsePayload(data.data);
@@ -141,7 +143,9 @@ async function loadFromSupabase(classId: string): Promise<Payload | null> {
         return payload;
       }
     }
-  } catch {}
+  } catch {
+    // Bij een tijdelijk verbindings- of parseprobleem valt de pagina terug op het standaardrooster.
+  }
   return null;
 }
 
@@ -167,19 +171,23 @@ const Dagritme = () => {
   const [showVakBeheer, setShowVakBeheer] = useState(false);
   const [nieuwVakTitel, setNieuwVakTitel] = useState("");
   const [nieuwVakTone, setNieuwVakTone] = useState<Tone>("coral");
+  const history = useHistorySnapshots<Payload>(`dagritme-${activeClassId ?? "geen-klas"}`);
 
   const weekRef = useRef(week);
   useEffect(() => { weekRef.current = week; }, [week]);
   const vakOptiesRef = useRef(vakOpties);
   useEffect(() => { vakOptiesRef.current = vakOpties; }, [vakOpties]);
+  const lastSavedRef = useRef<Payload>({ week: defaultWeek, vakken: DEFAULT_VAK_OPTIES });
 
   useEffect(() => {
     if (klasLoading) return;
     if (!activeClassId) { setWeek(defaultWeek); setVakOpties(DEFAULT_VAK_OPTIES); setLoading(false); return; }
     setLoading(true);
-    loadFromSupabase(activeClassId).then(result => {
-      setWeek(result?.week ?? defaultWeek);
-      setVakOpties(result?.vakken ?? DEFAULT_VAK_OPTIES);
+    loadDagritme(activeClassId).then(result => {
+      const loaded = result ?? { week: defaultWeek, vakken: DEFAULT_VAK_OPTIES };
+      setWeek(loaded.week);
+      setVakOpties(loaded.vakken);
+      lastSavedRef.current = loaded;
       setLoading(false);
     });
   }, [activeClassId, klasLoading]);
@@ -189,15 +197,18 @@ const Dagritme = () => {
     setSaving(true);
     const err = await saveToSupabase(activeClassId, { week: newWeek, vakken: newVakOpties });
     setSaveError(err);
+    if (!err) lastSavedRef.current = { week: newWeek, vakken: newVakOpties };
     setSaving(false);
   };
 
-  const saveWeek = async (newWeek: Day[]) => {
+  const saveWeek = async (newWeek: Day[], label = "Rooster gewijzigd", record = true) => {
+    if (record) history.capture(label, { week, vakken: vakOptiesRef.current });
     setWeek(newWeek);
     await persist(newWeek, vakOptiesRef.current);
   };
 
   const persistVakken = (next: VakOptie[]) => {
+    history.capture("Vakken gewijzigd", { week: weekRef.current, vakken: vakOpties });
     setVakOpties(next);
     persist(weekRef.current, next);
   };
@@ -227,17 +238,18 @@ const Dagritme = () => {
         ? { ...d, blocks: d.blocks.map(b => b.id === editing.blockId ? editVal : b) }
         : d
     );
-    saveWeek(newWeek);
+    saveWeek(newWeek, "Lesblok bewerkt");
     setEditing(null); setEditVal(null);
   };
 
   const deleteBlock = (dIdx: number, blockId: string) => {
     saveWeek(week.map((d, i) =>
       i === dIdx ? { ...d, blocks: d.blocks.filter(b => b.id !== blockId) } : d
-    ));
+    ), "Lesblok verwijderd");
   };
 
   const addBlock = (dIdx: number) => {
+    history.capture("Vóór lesblok toevoegen", { week, vakken: vakOptiesRef.current });
     const newBlock: Block = { id: uid(), time: "08:00", title: "Nieuw blok", subject: "", tone: "amber", les: "", lesdoelen: "" };
     const newWeek = week.map((d, i) =>
       i === dIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d
@@ -251,7 +263,7 @@ const Dagritme = () => {
     const last = blocks[blocks.length - 1];
     const time = last ? addMinutes(last.time, 30) : "08:30";
     const newBlock: Block = { id: uid(), time, title: vak.title, subject: "", tone: vak.tone, les: "", lesdoelen: "" };
-    saveWeek(week.map((d, i) => i === dIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d));
+    saveWeek(week.map((d, i) => i === dIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d), "Lesblok toegevoegd");
   };
 
   const updateInline = (dIdx: number, blockId: string, field: "les" | "lesdoelen", value: string) => {
@@ -272,7 +284,7 @@ const Dagritme = () => {
     const newWeek = week.map((d, i) =>
       i === dIdx ? { ...d, blocks: [...d.blocks].sort((a, b) => a.time.localeCompare(b.time)) } : d
     );
-    saveWeek(newWeek);
+    saveWeek(newWeek, "Tijd aangepast");
   };
 
   const wisWeek = () => {
@@ -280,17 +292,25 @@ const Dagritme = () => {
     saveWeek(week.map(d => ({
       ...d,
       blocks: d.blocks.map(b => ({ ...b, les: "", lesdoelen: "" })),
-    })));
+    })), "Vóór week wissen");
   };
 
   const herstelWeek = () => {
     if (!undoWeek) return;
-    saveWeek(undoWeek);
+    saveWeek(undoWeek, "Vóór ongedaan maken");
     setUndoWeek(null);
   };
 
   const saveInline = () => {
+    history.capture("Vóór lesinformatie aanpassen", lastSavedRef.current);
     persist(weekRef.current, vakOptiesRef.current);
+  };
+
+  const restoreDagritme = async (snapshot: HistorySnapshot<Payload>) => {
+    history.capture("Vóór herstel", { week, vakken: vakOpties });
+    setWeek(snapshot.data.week);
+    setVakOpties(snapshot.data.vakken);
+    await persist(snapshot.data.week, snapshot.data.vakken);
   };
 
   const today = todayIdx();
@@ -304,7 +324,7 @@ const Dagritme = () => {
         {/* Header */}
         <div className="mb-10 animate-fade-up flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="font-display text-4xl font-semibold md:text-5xl">
+            <h1 className="select-none font-display text-4xl font-semibold md:text-5xl">
               {view === "dag" ? (
                 <span className="flex items-baseline gap-3">
                   {DAYS[dayIdx]}
@@ -319,6 +339,7 @@ const Dagritme = () => {
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <HistoryPanel title="Dagritme" snapshots={history.snapshots} onRestore={restoreDagritme} onRemove={history.remove} onClear={history.clear} />
             {saving && <span className="text-xs text-muted-foreground">Opslaan…</span>}
             {saveError && <span className="text-xs text-red-500">⚠ Opslaan mislukt: {saveError}</span>}
             <button

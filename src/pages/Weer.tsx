@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 
-type WeerData = { temp: number; gevoels: number; code: number };
+export type WeerData = { temp: number; gevoels: number; code: number };
 
-const fetchWeer = async (): Promise<WeerData> => {
+export const fetchWeer = async (): Promise<WeerData> => {
   const res = await fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=51.77&longitude=4.62&current=temperature_2m,apparent_temperature,weathercode&timezone=Europe%2FAmsterdam"
   );
@@ -15,7 +15,7 @@ const fetchWeer = async (): Promise<WeerData> => {
   };
 };
 
-const weerEmoji = (code: number) => {
+export const weerEmoji = (code: number) => {
   if (code === 0)        return "☀️";
   if (code <= 2)         return "🌤️";
   if (code === 3)        return "☁️";
@@ -26,7 +26,7 @@ const weerEmoji = (code: number) => {
   return "⛈️";
 };
 
-const weerTekst = (code: number) => {
+export const weerTekst = (code: number) => {
   if (code === 0)        return "Heldere lucht";
   if (code <= 2)         return "Licht bewolkt";
   if (code === 3)        return "Bewolkt";
@@ -38,7 +38,7 @@ const weerTekst = (code: number) => {
   return "Onweer";
 };
 
-const jasNodig = (temp: number, code: number) => !(temp >= 18 && code <= 1);
+export const jasNodig = (temp: number, code: number) => !(temp >= 18 && code <= 1);
 const jasTekst = (temp: number) =>
   temp >= 18
     ? "Neem je jas mee naar buiten. Je kunt hem uittrekken als je het warm krijgt."

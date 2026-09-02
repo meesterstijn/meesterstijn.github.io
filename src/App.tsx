@@ -27,6 +27,7 @@ const Notities        = lazy(() => import("./pages/Notities.tsx"));
 const Bloemenveld     = lazy(() => import("./pages/Bloemenveld.tsx"));
 const Werkwoordspelling = lazy(() => import("./pages/Werkwoordspelling.tsx"));
 const Tafelvoetbal    = lazy(() => import("./pages/Tafelvoetbal.tsx"));
+const Dagstart        = lazy(() => import("./pages/Dagstart.tsx"));
 const NotFound        = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
@@ -69,6 +70,23 @@ const HomeButton = () => (
   </Link>
 );
 
+const FloatingNavigation = () => {
+  const { pathname } = useLocation();
+  if (pathname === "/dagstart") return null;
+  return (
+    <>
+      <div className="fixed bottom-5 left-5 z-50 flex gap-2">
+        <FullscreenButton />
+        <HomeButton />
+      </div>
+      <div className="fixed bottom-5 right-5 z-50 flex gap-2">
+        <HomeButton />
+        <FullscreenButton />
+      </div>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -99,17 +117,11 @@ const App = () => (
           <Route path="/bloemenveld" element={<Bloemenveld />} />
           <Route path="/werkwoordspelling" element={<Werkwoordspelling />} />
           <Route path="/tafelvoetbal" element={<Tafelvoetbal />} />
+          <Route path="/dagstart" element={<Dagstart />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
-        <div className="fixed bottom-5 left-5 z-50 flex gap-2">
-          <FullscreenButton />
-          <HomeButton />
-        </div>
-        <div className="fixed bottom-5 right-5 z-50 flex gap-2">
-          <HomeButton />
-          <FullscreenButton />
-        </div>
+        <FloatingNavigation />
       </BrowserRouter>
       </ClassProvider>
       </AuthGate>

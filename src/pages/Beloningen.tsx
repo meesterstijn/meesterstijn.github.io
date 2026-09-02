@@ -4,12 +4,15 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Plus, Minus, Trash2, Trophy, Star, ArrowUpRight, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { FieldItemSVG, VELD_ITEMS, type FieldItemType } from "@/components/FieldItemSVG";
+import { HistoryPanel } from "@/components/HistoryPanel";
+import { useHistorySnapshots, type HistorySnapshot } from "@/hooks/useHistorySnapshots";
 
 const STARS_PER_ITEM = 5;
 const TODAY = new Date().toISOString().split("T")[0];
 
 type Reward    = { id: number; label: string; goal: number; claimed: boolean };
-type FieldItem = { type: FieldItemType };
+type FieldItem = { type: FieldItemType; x?: number; y?: number };
+type RewardsSnapshot = { points: number; unlockStars: number; rewards: Reward[]; fieldItems: FieldItem[] };
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
 const loadClassData = async () => {
@@ -26,7 +29,7 @@ const fetchRewards    = async (): Promise<Reward[]> => {
   return data ?? [];
 };
 const fetchFieldItems = async (): Promise<FieldItem[]> => {
-  const { data } = await supabase.from("field_items").select("type");
+  const { data } = await supabase.from("field_items").select("type,x,y");
   return (data ?? []) as FieldItem[];
 };
 
@@ -60,6 +63,9 @@ const Beloningen = () => {
   const [newGoal,     setNewGoal]     = useState("");
   const [loading,     setLoading]     = useState(true);
   const [justUnlocked, setJustUnlocked] = useState<FieldItemType | null>(null);
+  const history = useHistorySnapshots<RewardsSnapshot>("beloningen");
+
+  const currentSnapshot = (): RewardsSnapshot => ({ points, unlockStars, rewards, fieldItems });
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -107,6 +113,7 @@ const Beloningen = () => {
 
   // ── Daily points ──────────────────────────────────────────────────────────
   const changePoints = async (delta: number) => {
+    history.capture(delta === -points ? "Vóór punten resetten" : delta > 0 ? "Vóór punt toevoegen" : "Vóór punt aftrekken", currentSnapshot());
     const next = Math.max(0, points + delta);
     setPoints(next);
     await setDailyPoints(next);
@@ -114,6 +121,7 @@ const Beloningen = () => {
 
   // ── Unlock stars ──────────────────────────────────────────────────────────
   const addUnlockStars = async (n: number) => {
+    history.capture("Vóór ster toevoegen", currentSnapshot());
     const next    = unlockStars + n;
     const newCount = Math.min(Math.floor(next / STARS_PER_ITEM), VELD_ITEMS.length);
 
@@ -140,17 +148,36 @@ const Beloningen = () => {
   const handleAddReward = async () => {
     const goal = parseInt(newGoal);
     if (!newLabel.trim() || isNaN(goal) || goal <= 0) return;
+    history.capture("Vóór beloning toevoegen", currentSnapshot());
     await addReward(newLabel.trim(), goal);
     setNewLabel(""); setNewGoal("");
     setRewards(await fetchRewards());
   };
   const handleToggle = async (r: Reward) => {
+    history.capture(r.claimed ? "Vóór beloning terugzetten" : "Vóór beloning uitdelen", currentSnapshot());
     await toggleClaimed(r.id, !r.claimed);
     setRewards(p => p.map(x => x.id === r.id ? { ...x, claimed: !x.claimed } : x));
   };
   const handleDelete = async (id: number) => {
+    history.capture("Vóór beloning verwijderen", currentSnapshot());
     await deleteReward(id);
     setRewards(p => p.filter(x => x.id !== id));
+  };
+
+  const restoreRewards = async (snapshot: HistorySnapshot<RewardsSnapshot>) => {
+    history.capture("Vóór herstel", currentSnapshot());
+    const restored = snapshot.data;
+    await supabase.from("class_points").update({ value: restored.points, unlock_stars: restored.unlockStars, last_reset_date: TODAY }).eq("id", 1);
+    await supabase.from("rewards").delete().neq("id", -1);
+    if (restored.rewards.length > 0) await supabase.from("rewards").insert(restored.rewards);
+    await supabase.from("field_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    if (restored.fieldItems.length > 0) {
+      await supabase.from("field_items").insert(restored.fieldItems.map(item => ({ type: item.type, x: item.x ?? 50, y: item.y ?? 50 })));
+    }
+    setPoints(restored.points);
+    setUnlockStarsS(restored.unlockStars);
+    setRewards(restored.rewards);
+    setFieldItems(restored.fieldItems);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -159,10 +186,13 @@ const Beloningen = () => {
       <SiteHeader />
       <main className="container py-10 md:py-14">
 
-        <div className="mb-10 animate-fade-up">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">De klas</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Beloningen</h1>
-          <p className="mt-3 text-muted-foreground">Spaar punten, verdien beloningen en bouw het veld op.</p>
+        <div className="mb-10 animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">De klas</p>
+            <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">Beloningen</h1>
+            <p className="mt-3 text-muted-foreground">Spaar punten, verdien beloningen en bouw het veld op.</p>
+          </div>
+          <HistoryPanel title="Beloningen en punten" snapshots={history.snapshots} onRestore={restoreRewards} onRemove={history.remove} onClear={history.clear} />
         </div>
 
         {loading ? <p className="text-muted-foreground">Laden…</p> : (

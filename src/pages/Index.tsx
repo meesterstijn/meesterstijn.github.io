@@ -3,6 +3,7 @@ import {
   PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
   Puzzle, LayoutList, Music2, Youtube, Radio, Image as ImageIcon,
   ArrowUpRight, ListChecks, Trophy, ClipboardList, Cloud,
+  Sunrise,
   type LucideIcon,
 } from "lucide-react";
 import { ClockCard } from "@/components/ClockCard";
@@ -18,6 +19,7 @@ type Tile = {
 };
 
 const tiles: Tile[] = [
+  { title: "Dagstart", desc: "Begin samen de schooldag", icon: Sunrise, href: "/dagstart", tone: "sage" },
   { title: "Whiteboard", desc: "Samen tekenen & uitleggen", icon: PencilLine, href: "/whiteboard", tone: "ink" },
   { title: "Planning",   desc: "Het rooster van Meester Stijn",   icon: CalendarDays, href: "/planning",  tone: "coral" },
   { title: "Bestanden",  desc: "Werkbladen & bronnen",      icon: FolderOpen,   href: "/bestanden", tone: "cream" },
