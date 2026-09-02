@@ -71,8 +71,6 @@ const HomeButton = () => (
 );
 
 const FloatingNavigation = () => {
-  const { pathname } = useLocation();
-  if (pathname === "/dagstart") return null;
   return (
     <>
       <div className="fixed bottom-5 left-5 z-50 flex gap-2">

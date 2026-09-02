@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  CalendarDays, Cake, Expand, Focus, Loader2, PencilLine,
+  CalendarDays, Cake, Focus, Loader2, PencilLine,
   RefreshCw, Sparkles, Sunrise,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -42,7 +42,6 @@ const Dagstart = () => {
   const [weatherError, setWeatherError] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
   const [showBirthday, setShowBirthday] = useState(false);
-  const [presentation, setPresentation] = useState(false);
   const [now, setNow] = useState(new Date());
   const [welcome, setWelcome] = useState(() => localStorage.getItem(WELCOME_KEY) ?? "Fijn dat jullie er zijn. We maken er samen een mooie dag van!");
 
@@ -85,20 +84,10 @@ const Dagstart = () => {
     localStorage.setItem(WELCOME_KEY, value);
   };
 
-  const enterPresentation = async () => {
-    setPresentation(true);
-    if (!document.fullscreenElement) await document.documentElement.requestFullscreen().catch(() => undefined);
-  };
-
-  const leavePresentation = async () => {
-    setPresentation(false);
-    if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
-  };
-
   return (
     <div className="min-h-screen bg-paper bg-warm">
-      {!presentation && <SiteHeader />}
-      <main className={`container ${presentation ? "py-6" : "py-8 md:py-12"}`}>
+      <SiteHeader />
+      <main className="container py-8 md:py-12">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
@@ -108,12 +97,6 @@ const Dagstart = () => {
               Dagstart{activeClass ? ` · ${activeClass.name}` : ""}
             </h1>
           </div>
-          <button
-            onClick={() => presentation ? leavePresentation() : enterPresentation()}
-            className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium shadow-soft transition-smooth hover:border-accent hover:text-accent sm:self-auto"
-          >
-            <Expand className="h-4 w-4" /> {presentation ? "Normale weergave" : "Presenteren"}
-          </button>
         </div>
 
         <section className="grid gap-5 lg:grid-cols-12">
