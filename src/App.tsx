@@ -20,6 +20,7 @@ const Klassenafspraken = lazy(() => import("./pages/Klassenafspraken.tsx"));
 const Beloningen      = lazy(() => import("./pages/Beloningen.tsx"));
 const ToolsPage       = lazy(() => import("./pages/ToolsPage.tsx"));
 const Spellen         = lazy(() => import("./pages/Spellen.tsx"));
+const Energizers      = lazy(() => import("./pages/Energizers.tsx"));
 const Taakjes         = lazy(() => import("./pages/Taakjes.tsx"));
 const Dagritme        = lazy(() => import("./pages/Dagritme.tsx"));
 const Prive           = lazy(() => import("./pages/Prive.tsx"));
@@ -108,6 +109,7 @@ const App = () => (
           <Route path="/beloningen" element={<Beloningen />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/spellen" element={<Spellen />} />
+          <Route path="/energizers" element={<Energizers />} />
           <Route path="/taakjes" element={<Taakjes />} />
           <Route path="/dagritme" element={<Dagritme />} />
           <Route path="/prive" element={<Prive />} />

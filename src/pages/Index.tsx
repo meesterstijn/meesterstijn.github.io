@@ -3,7 +3,7 @@ import {
   PencilLine, CalendarDays, FolderOpen, BookOpen, Wrench, Clock,
   Puzzle, LayoutList, Music2, Youtube, Radio, Image as ImageIcon,
   ArrowUpRight, ListChecks, Trophy, ClipboardList, Cloud,
-  Sunrise,
+  Sunrise, Zap,
   type LucideIcon,
 } from "lucide-react";
 import { ClockCard } from "@/components/ClockCard";
@@ -28,6 +28,7 @@ const tiles: Tile[] = [
   { title: "Klastools",  desc: "Timer, tekstbord & stoplicht", icon: Wrench,      href: "/klastools", tone: "coral" },
   { title: "Focus",      desc: "Concentratietimer",               icon: Clock,       href: "/focus",     tone: "sage"  },
   { title: "Spellen",    desc: "Pauzespellen & challenges",  icon: Puzzle,       href: "/spellen",   tone: "cream" },
+  { title: "Energizers", desc: "Korte activiteiten om wakker te schudden", icon: Zap, href: "/energizers", tone: "sage" },
   { title: "Dagritme",         desc: "Het weekrooster van de klas", icon: LayoutList,  href: "/dagritme",                  tone: "ink" },
   { title: "Klassenafspraken", desc: "Onze regels en afspraken",  icon: ListChecks,   href: "/klassenafspraken",          tone: "sage" },
   { title: "Beloningen",       desc: "Punten & beloningssysteem", icon: Trophy,        href: "/beloningen",                tone: "cream" },
