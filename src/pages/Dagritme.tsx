@@ -5,6 +5,8 @@ import { Clock, Pencil, Plus, Trash2, Check, X, LayoutGrid, CalendarDays, Settin
 import { supabase } from "@/lib/supabase";
 import { useClasses } from "@/context/ClassContext";
 import { TimeField } from "@/components/TimeField";
+import { LessonDragHandle } from "@/components/LessonDragHandle";
+import { nextLessonTime, reorderLessons } from "@/lib/dagritme";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { useHistorySnapshots, type HistorySnapshot } from "@/hooks/useHistorySnapshots";
 
@@ -58,59 +60,48 @@ const fmtLong = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 export const defaultWeek: Day[] = DAYS.map((day, i) => ({
   day,
   blocks: [
-    { id: `${i}a`, time: "08:30", title: "Inloop",     subject: "", tone: "ink",   les: "", lesdoelen: "" },
-    { id: `${i}b`, time: "08:45", title: "Bijbel",     subject: "", tone: "sage",  les: "", lesdoelen: "" },
-    { id: `${i}c`, time: "09:15", title: "Taal",       subject: "", tone: "coral", les: "", lesdoelen: "" },
+    { id: `${i}a`, time: "08:30", title: "Inloop",     subject: "", tone: "cream",   les: "", lesdoelen: "" },
+    { id: `${i}b`, time: "08:45", title: "Bijbelverhaal",     subject: "", tone: "cream",  les: "", lesdoelen: "" },
+    { id: `${i}c`, time: "09:15", title: "Taal",       subject: "", tone: "cream", les: "", lesdoelen: "" },
     { id: `${i}d`, time: "10:00", title: "Pauze",      subject: "", tone: "cream", les: "", lesdoelen: "" },
-    { id: `${i}e`, time: "10:15", title: "Rekenen",    subject: "", tone: "coral", les: "", lesdoelen: "" },
-    { id: `${i}f`, time: "11:15", title: "Zaakvakken", subject: "", tone: "sage",  les: "", lesdoelen: "" },
+    { id: `${i}e`, time: "10:15", title: "Rekenen",    subject: "", tone: "cream", les: "", lesdoelen: "" },
+    { id: `${i}f`, time: "11:15", title: "Zaakvakken", subject: "", tone: "cream",  les: "", lesdoelen: "" },
     { id: `${i}g`, time: "12:00", title: "Pauze",      subject: "", tone: "cream", les: "", lesdoelen: "" },
-    { id: `${i}h`, time: "12:30", title: "Les",        subject: "", tone: "coral", les: "", lesdoelen: "" },
-    { id: `${i}i`, time: "14:15", title: "Afsluiting", subject: "", tone: "ink",   les: "", lesdoelen: "" },
+    { id: `${i}h`, time: "12:30", title: "Les",        subject: "", tone: "cream", les: "", lesdoelen: "" },
+    { id: `${i}i`, time: "14:15", title: "Afsluiting", subject: "", tone: "cream",   les: "", lesdoelen: "" },
   ],
 }));
 
 const normalize = (w: Day[]): Day[] =>
   w.map(d => ({
     ...d,
-    blocks: d.blocks.map(b => ({ les: "", lesdoelen: "", ...b })),
+    blocks: d.blocks.map(b => ({ les: "", lesdoelen: "", ...b, title: b.title.trim().toLocaleLowerCase() === "bijbel" ? "Bijbelverhaal" : b.title, tone: "cream" as Tone })),
   }));
 
-const toneBg: Record<Tone, string> = {
-  coral: "border-l-accent bg-accent/5",
-  sage:  "border-l-sage bg-sage/5",
-  amber: "border-l-highlight bg-highlight/5",
-  ink:   "border-l-primary bg-primary/5",
-  cream: "border-l-border bg-muted/40",
-};
-
-const toneOptions: Tone[] = ["coral", "sage", "ink", "cream"];
-const toneLabels: Record<Tone, string> = {
-  coral: "Rood", sage: "Groen", amber: "Geel", ink: "Blauw", cream: "Grijs",
-};
-const toneDot: Record<Tone, string> = {
-  coral: "bg-accent", sage: "bg-sage", amber: "bg-highlight", ink: "bg-primary", cream: "bg-border",
-};
+const subjectStyle = (title: string) => title.trim().toLocaleLowerCase() === "pauze"
+  ? "border-l-highlight bg-highlight/20"
+  : "border-l-primary/40 bg-secondary/40";
 
 type VakOptie = { title: string; tone: Tone };
 
 const DEFAULT_VAK_OPTIES: VakOptie[] = [
-  { title: "Inloop",           tone: "ink"   },
-  { title: "Stillezen",        tone: "ink"   },
-  { title: "Bijbel",           tone: "sage"  },
-  { title: "Kwink",            tone: "sage"  },
-  { title: "Taal",             tone: "coral" },
-  { title: "Spelling",         tone: "coral" },
-  { title: "Rekenen",          tone: "coral" },
-  { title: "Automatiseren",    tone: "coral" },
-  { title: "Technisch lezen",  tone: "sage"  },
-  { title: "Begrijpend lezen", tone: "sage"  },
-  { title: "Schrijven",        tone: "sage"  },
-  { title: "Zaakvakken",       tone: "sage"  },
-  { title: "Faqta",            tone: "sage"  },
-  { title: "Les",              tone: "coral" },
+  { title: "Inloop",           tone: "cream"   },
+  { title: "Stillezen",        tone: "cream"   },
+  { title: "Bijbelverhaal",           tone: "cream"  },
+  { title: "Kwink",            tone: "cream"  },
+  { title: "Taal",             tone: "cream" },
+  { title: "Spelling",         tone: "cream" },
+  { title: "Rekenen",          tone: "cream" },
+  { title: "Automatiseren",    tone: "cream" },
+  { title: "Technisch lezen",  tone: "cream"  },
+  { title: "Begrijpend lezen", tone: "cream"  },
+  { title: "Schrijven",        tone: "cream"  },
+  { title: "Zaakvakken",       tone: "cream"  },
+  { title: "Faqta",            tone: "cream"  },
+  { title: "Les",              tone: "cream" },
   { title: "Pauze",            tone: "cream" },
-  { title: "Afsluiting",       tone: "ink"   },
+  { title: "Afsluiting",       tone: "cream"   },
+  { title: "Engels",           tone: "cream"  },
 ];
 
 const addMinutes = (time: string, mins: number): string => {
@@ -126,7 +117,13 @@ export type Payload = { week: Day[]; vakken: VakOptie[] };
 const parsePayload = (raw: string): Payload => {
   const parsed = JSON.parse(raw);
   if (Array.isArray(parsed)) return { week: normalize(parsed), vakken: DEFAULT_VAK_OPTIES };
-  return { week: normalize(parsed.week ?? []), vakken: parsed.vakken ?? DEFAULT_VAK_OPTIES };
+  const vakken: VakOptie[] = (parsed.vakken ?? DEFAULT_VAK_OPTIES).map((v: VakOptie) => ({ ...v, title: v.title.trim().toLocaleLowerCase() === "bijbel" ? "Bijbelverhaal" : v.title, tone: "cream" }));
+  return {
+    week: normalize(parsed.week ?? []),
+    vakken: vakken.some(v => v.title.trim().toLocaleLowerCase() === "engels")
+      ? vakken
+      : [...vakken, { title: "Engels", tone: "cream" }],
+  };
 };
 
 export async function loadDagritme(classId: string): Promise<Payload | null> {
@@ -150,7 +147,7 @@ export async function loadDagritme(classId: string): Promise<Payload | null> {
 }
 
 async function saveToSupabase(classId: string, payload: Payload): Promise<string | null> {
-  const { error } = await supabase.from("dagritme").upsert({ class_id: classId, data: JSON.stringify(payload) }, { onConflict: "class_id" });
+  const { error } = await supabase.from("dagritme").upsert({ class_id: classId, data: JSON.stringify({ week: normalize(payload.week), vakken: payload.vakken.map(v => ({ ...v, tone: "cream" })) }) }, { onConflict: "class_id" });
   return error ? error.message : null;
 }
 
@@ -170,7 +167,6 @@ const Dagritme = () => {
   const [vakOpties, setVakOpties] = useState<VakOptie[]>(DEFAULT_VAK_OPTIES);
   const [showVakBeheer, setShowVakBeheer] = useState(false);
   const [nieuwVakTitel, setNieuwVakTitel] = useState("");
-  const [nieuwVakTone, setNieuwVakTone] = useState<Tone>("coral");
   const history = useHistorySnapshots<Payload>(`dagritme-${activeClassId ?? "geen-klas"}`);
 
   const weekRef = useRef(week);
@@ -204,24 +200,25 @@ const Dagritme = () => {
   const saveWeek = async (newWeek: Day[], label = "Rooster gewijzigd", record = true) => {
     if (record) history.capture(label, { week, vakken: vakOptiesRef.current });
     setWeek(newWeek);
+    weekRef.current = newWeek;
     await persist(newWeek, vakOptiesRef.current);
   };
 
   const persistVakken = (next: VakOptie[]) => {
     history.capture("Vakken gewijzigd", { week: weekRef.current, vakken: vakOpties });
     setVakOpties(next);
+    vakOptiesRef.current = next;
     persist(weekRef.current, next);
   };
 
   const addVak = () => {
     const title = nieuwVakTitel.trim();
     if (!title) return;
-    persistVakken([...vakOpties, { title, tone: nieuwVakTone }]);
+    persistVakken([...vakOpties, { title, tone: "cream" }]);
     setNieuwVakTitel("");
   };
 
   const removeVak = (idx: number) => persistVakken(vakOpties.filter((_, i) => i !== idx));
-  const setVakTone = (idx: number, tone: Tone) => persistVakken(vakOpties.map((v, i) => i === idx ? { ...v, tone } : v));
   const updateVakTitel = (idx: number, title: string) =>
     setVakOpties(prev => prev.map((v, i) => i === idx ? { ...v, title } : v));
 
@@ -233,14 +230,40 @@ const Dagritme = () => {
 
   const saveEdit = () => {
     if (!editing || !editVal) return;
+    const title = editVal.title.trim();
+    if (!title) return;
+    const nextVakken = vakOptiesRef.current.some(v => v.title.trim().toLocaleLowerCase() === title.toLocaleLowerCase())
+      ? vakOptiesRef.current
+      : [...vakOptiesRef.current, { title, tone: editVal.tone }];
     const newWeek = week.map((d, i) =>
       i === editing.dayIdx
-        ? { ...d, blocks: d.blocks.map(b => b.id === editing.blockId ? editVal : b) }
+        ? { ...d, blocks: d.blocks.map(b => b.id === editing.blockId ? { ...editVal, title } : b) }
         : d
     );
-    saveWeek(newWeek, "Lesblok bewerkt");
+    history.capture("Lesblok bewerkt", { week, vakken: vakOptiesRef.current });
+    setWeek(newWeek);
+    weekRef.current = newWeek;
+    setVakOpties(nextVakken);
+    vakOptiesRef.current = nextVakken;
+    void persist(newWeek, nextVakken);
     setEditing(null); setEditVal(null);
   };
+
+  const moveLesson = (dIdx: number, fromId: string, toId: string) => {
+    if (!unlocked || saving || loading) return;
+    const current = weekRef.current;
+    const blocks = reorderLessons(current[dIdx].blocks, fromId, toId);
+    if (blocks === current[dIdx].blocks) return;
+    void saveWeek(current.map((day, index) => index === dIdx ? { ...day, blocks } : day), "Vakken verplaatst");
+  };
+  const dragHandle = (dIdx: number, block: Block) => unlocked && <LessonDragHandle
+    day={dIdx} id={block.id} title={block.title} disabled={saving || loading}
+    onMove={target => moveLesson(dIdx, block.id, target)}
+    onStep={direction => {
+      const blocks = weekRef.current[dIdx].blocks;
+      const target = blocks[blocks.findIndex(b => b.id === block.id) + direction];
+      if (target) moveLesson(dIdx, block.id, target.id);
+    }} />;
 
   const deleteBlock = (dIdx: number, blockId: string) => {
     saveWeek(week.map((d, i) =>
@@ -250,7 +273,7 @@ const Dagritme = () => {
 
   const addBlock = (dIdx: number) => {
     history.capture("Vóór lesblok toevoegen", { week, vakken: vakOptiesRef.current });
-    const newBlock: Block = { id: uid(), time: "08:00", title: "Nieuw blok", subject: "", tone: "amber", les: "", lesdoelen: "" };
+    const newBlock: Block = { id: uid(), time: nextLessonTime(week[dIdx].blocks), title: "Nieuw blok", subject: "", tone: "cream", les: "", lesdoelen: "" };
     const newWeek = week.map((d, i) =>
       i === dIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d
     );
@@ -260,9 +283,8 @@ const Dagritme = () => {
 
   const addBlockFromVak = (dIdx: number, vak: VakOptie) => {
     const blocks = week[dIdx].blocks;
-    const last = blocks[blocks.length - 1];
-    const time = last ? addMinutes(last.time, 30) : "08:30";
-    const newBlock: Block = { id: uid(), time, title: vak.title, subject: "", tone: vak.tone, les: "", lesdoelen: "" };
+    const time = nextLessonTime(blocks);
+    const newBlock: Block = { id: uid(), time, title: vak.title, subject: "", tone: "cream", les: "", lesdoelen: "" };
     saveWeek(week.map((d, i) => i === dIdx ? { ...d, blocks: [...d.blocks, newBlock] } : d), "Lesblok toegevoegd");
   };
 
@@ -406,7 +428,7 @@ const Dagritme = () => {
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted-foreground">Tijd</label>
                   <div className="w-fit rounded-xl border border-border bg-background px-4 py-2.5 text-sm">
-                    <TimeField value={editVal.time} onChange={v => setEditVal({ ...editVal, time: v })} />
+                    <TimeField minuteStep={15} value={editVal.time} onChange={v => setEditVal({ ...editVal, time: v })} />
                   </div>
                 </div>
                 <div>
@@ -418,17 +440,6 @@ const Dagritme = () => {
                   <label className="mb-1 block text-xs font-semibold text-muted-foreground">Ondertitel (optioneel)</label>
                   <input value={editVal.subject} onChange={e => setEditVal({ ...editVal, subject: e.target.value })}
                     className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Kleur</label>
-                  <div className="flex flex-wrap gap-2">
-                    {toneOptions.map(t => (
-                      <button key={t} onClick={() => setEditVal({ ...editVal, tone: t })}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-smooth ${editVal.tone === t ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}>
-                        {toneLabels[t]}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
               <div className="mt-5 flex gap-2">
@@ -455,23 +466,13 @@ const Dagritme = () => {
               </div>
               <div className="space-y-2">
                 {vakOpties.map((v, idx) => (
-                  <div key={idx} className={`flex items-center gap-2 rounded-xl border-l-4 px-3 py-2 ${toneBg[v.tone]}`}>
+                  <div key={idx} className={`flex items-center gap-2 rounded-xl border-l-4 px-3 py-2 ${subjectStyle(v.title)}`}>
                     <input
                       value={v.title}
                       onChange={e => updateVakTitel(idx, e.target.value)}
                       onBlur={saveInline}
                       className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none"
                     />
-                    <div className="flex shrink-0 gap-1">
-                      {toneOptions.map(t => (
-                        <button
-                          key={t}
-                          onClick={() => setVakTone(idx, t)}
-                          title={toneLabels[t]}
-                          className={`h-5 w-5 rounded-full ${toneDot[t]} ${v.tone === t ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : ""}`}
-                        />
-                      ))}
-                    </div>
                     <button onClick={() => removeVak(idx)} className="shrink-0 rounded-lg p-1 hover:bg-destructive/20 hover:text-destructive">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -489,16 +490,6 @@ const Dagritme = () => {
                   placeholder="Nieuw vak…"
                   className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
                 />
-                <div className="flex shrink-0 gap-1">
-                  {toneOptions.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => setNieuwVakTone(t)}
-                      title={toneLabels[t]}
-                      className={`h-8 w-8 rounded-full ${toneDot[t]} ${nieuwVakTone === t ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : ""}`}
-                    />
-                  ))}
-                </div>
                 <button onClick={addVak} className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-smooth hover:opacity-90">
                   <Plus className="h-4 w-4" /> Toevoegen
                 </button>
@@ -514,7 +505,7 @@ const Dagritme = () => {
           {/* Mobiel: alleen blokken */}
           <div className="md:hidden space-y-2">
             {week[dayIdx].blocks.map(b => (
-              <div key={b.id} className={`rounded-xl border-l-4 px-3 py-2.5 flex items-center ${toneBg[b.tone]}`}>
+              <div key={b.id} className={`rounded-xl border-l-4 px-3 py-2.5 flex items-center ${subjectStyle(b.title)}`}>
                 <div className="flex items-center gap-2">
                   <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{b.time}</span>
                   <p className="text-sm font-medium leading-tight">{b.title}</p>
@@ -560,15 +551,16 @@ const Dagritme = () => {
 
               <div className="space-y-2">
                 {week[dayIdx].blocks.map(b => (
-                  <div key={b.id} className="grid grid-cols-10 gap-3 items-stretch">
+                  <div key={b.id} data-lesson-id={b.id} data-lesson-day={dayIdx} className="grid grid-cols-10 gap-3 items-stretch rounded-xl data-[drop-target=true]:ring-2 data-[drop-target=true]:ring-primary">
 
                     {/* 2/5 — dagritme kaart */}
-                    <div className={`col-span-3 group/block rounded-xl border-l-4 px-3 py-2.5 flex items-center ${toneBg[b.tone]}`}>
+                    <div className={`col-span-3 group/block rounded-xl border-l-4 px-3 py-2.5 flex items-center ${subjectStyle(b.title)}`}>
+                      {dragHandle(dayIdx, b)}
                       <div className="flex w-full items-center justify-between gap-1">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             {unlocked ? (
-                              <TimeField
+                              <TimeField minuteStep={15}
                                 value={b.time}
                                 onChange={v => updateBlockTime(dayIdx, b.id, v)}
                                 onBlur={() => handleTimeBlur(dayIdx)}
@@ -643,7 +635,7 @@ const Dagritme = () => {
                     <button
                       key={v.title}
                       onClick={() => addBlockFromVak(dayIdx, v)}
-                      className={`rounded-full border border-transparent px-3 py-1 text-xs font-medium transition-smooth hover:border-accent ${toneBg[v.tone]}`}
+                      className={`rounded-full border border-transparent px-3 py-1 text-xs font-medium transition-smooth hover:border-accent ${subjectStyle(v.title)}`}
                     >
                       {v.title}
                     </button>
@@ -677,12 +669,13 @@ const Dagritme = () => {
                 </header>
                 <ul className="space-y-2">
                   {d.blocks.map(b => (
-                    <li key={b.id} className={`group/block rounded-xl border-l-4 px-3 py-2 transition-smooth flex items-center ${toneBg[b.tone]}`}>
+                    <li key={b.id} data-lesson-id={b.id} data-lesson-day={i} className={`group/block rounded-xl border-l-4 px-3 py-2 transition-smooth flex items-center data-[drop-target=true]:ring-2 data-[drop-target=true]:ring-primary ${subjectStyle(b.title)}`}>
+                      {dragHandle(i, b)}
                       <div className="flex w-full items-center justify-between gap-1">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             {unlocked ? (
-                              <TimeField
+                              <TimeField minuteStep={15}
                                 value={b.time}
                                 onChange={v => updateBlockTime(i, b.id, v)}
                                 onBlur={() => handleTimeBlur(i)}
@@ -715,7 +708,7 @@ const Dagritme = () => {
                       <button
                         key={v.title}
                         onClick={() => addBlockFromVak(i, v)}
-                        className={`rounded-full border border-transparent px-2.5 py-1 text-xs font-medium transition-smooth hover:border-accent ${toneBg[v.tone]}`}
+                        className={`rounded-full border border-transparent px-2.5 py-1 text-xs font-medium transition-smooth hover:border-accent ${subjectStyle(v.title)}`}
                       >
                         {v.title}
                       </button>

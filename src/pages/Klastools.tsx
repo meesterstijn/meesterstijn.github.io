@@ -1,6 +1,10 @@
+import { KlaarWidget } from "@/components/KlaarWidget";
+import { DagplanningWidget } from "@/components/DagplanningWidget";
 import { useState, useEffect, useRef } from "react";
+import { BOARD_CLASSES } from "@/components/widgetBoardLayout";
+import { WidgetBoard } from "@/components/WidgetBoard";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Sprout, Hand } from "lucide-react";
+import { Play, Pause, RotateCcw, Plus, Minus, Image as ImageIcon, Upload, X, Sprout } from "lucide-react";
 import { StoplichtWidget } from "@/components/StoplichtWidget";
 import { TekstbordWidget } from "@/components/TekstbordWidget";
 import { BeurtstokjesCompact } from "@/components/BeurtstokjesCompact";
@@ -79,7 +83,6 @@ const Timer = ({ showPlant, onTogglePlant, onStateChange, onDone }: {
 
   return (
     <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Timer</p>
       <div className="flex flex-col items-center gap-6">
         {/* Cirkel */}
         <div className="relative h-48 w-48">
@@ -166,7 +169,6 @@ const SAVED_IMAGES = [
 ];
 
 const Klastools = () => {
-  const [showBeurtstokjes, setShowBeurtstokjes] = useState(false);
   const [showPlant, setShowPlant]         = useState(false);
   const [plantCount, setPlantCount]       = useState<number | null>(null);
   const [plantProgress, setPlantProgress] = useState(0);
@@ -244,14 +246,20 @@ const Klastools = () => {
   return (
     <div className="min-h-screen bg-paper bg-warm">
       <SiteHeader />
-      <main className="container py-10 md:py-14">
-        <div className="grid gap-6 md:grid-cols-4">
-          <Timer
+      <main className={BOARD_CLASSES.page}>
+        <WidgetBoard widgets={[
+          { id: "timer", title: "Timer", width: 3, content: (<Timer
             showPlant={showPlant}
             onTogglePlant={() => setShowPlant(v => !v)}
             onStateChange={handleState}
             onDone={handleDone}
-          />
+          />) },
+          { id: "tekstbord", title: "Tekstbord", width: 6, content: <TekstbordWidget /> },
+          { id: "stoplicht", title: "Stoplicht", width: 3, content: <StoplichtWidget showTitle={false} /> },
+          { id: "beurtstokjes", title: "Beurtstokjes", width: 3, height: 320, below: "stoplicht", content: <div className="p-4"><BeurtstokjesCompact /></div> },
+          { id: "klaar", title: "Klaar?", width: 3, visible: false, content: <KlaarWidget /> },
+          { id: "dagplanning", title: "Dagplanning", width: 4, visible: false, content: <DagplanningWidget /> },
+        ]} />
           {showPlant && (
             <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft flex flex-col items-center gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
@@ -270,23 +278,6 @@ const Klastools = () => {
               )}
             </div>
           )}
-          <div className={`${showPlant ? "" : "md:col-span-2"} h-full`}><TekstbordWidget /></div>
-          <StoplichtWidget footer={
-            <div className="w-full flex flex-col items-center gap-3 mt-2">
-              <button
-                onClick={() => setShowBeurtstokjes(v => !v)}
-                className={`flex items-center justify-center rounded-xl border px-5 py-2.5 transition-smooth hover:border-accent ${showBeurtstokjes ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
-              >
-                <Hand className="h-4 w-4" />
-              </button>
-              {showBeurtstokjes && (
-                <div className="w-full border-t border-border pt-4">
-                  <BeurtstokjesCompact />
-                </div>
-              )}
-            </div>
-          } />
-        </div>
       </main>
 
       {/* Foto knop — links van de rechter fullscreenknop */}

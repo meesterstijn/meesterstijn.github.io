@@ -8,12 +8,12 @@ const lights: { color: Light; label: string; bg: string; glow: string }[] = [
   { color: "groen",  label: "Met een fluisterstem samenwerken met schoudermaatje.",                  bg: "#22c55e", glow: "0 0 40px 10px #22c55e88" },
 ];
 
-export const StoplichtWidget = ({ footer }: { footer?: React.ReactNode } = {}) => {
+export const StoplichtWidget = ({ footer, showTitle = true }: { footer?: React.ReactNode; showTitle?: boolean } = {}) => {
   const [active, setActive] = useState<Light | null>(null);
 
   return (
     <div className="h-full rounded-3xl border border-border bg-card p-6 shadow-soft">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Stoplicht</p>
+      {showTitle && <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Stoplicht</p>}
       <div className="flex flex-col items-center gap-4">
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-5">
           {lights.map(l => (

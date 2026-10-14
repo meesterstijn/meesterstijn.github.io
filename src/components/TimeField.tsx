@@ -4,19 +4,23 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"))
 // Eigen 24-uurs tijdkiezer i.p.v. <input type="time">: die laat de browser/OS-locale
 // soms alsnog een AM/PM-weergave tonen, ongeacht het lang-attribuut.
 export const TimeField = ({
-  value, onChange, onBlur, className,
+  value, onChange, onBlur, className, minuteStep = 1,
 }: {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
   className?: string;
+  minuteStep?: 1 | 15;
 }) => {
   const [h, m] = value.split(":");
+  const minutes = MINUTES.filter((_, index) => index % minuteStep === 0);
+  const selectedMinute = minutes.includes(m) ? m : "";
   return (
     <span className={`inline-flex items-center gap-0.5 tabular-nums ${className ?? ""}`}>
       <select
+        aria-label="Uur"
         value={h}
-        onChange={e => onChange(`${e.target.value}:${m ?? "00"}`)}
+        onChange={e => onChange(`${e.target.value}:${selectedMinute || "00"}`)}
         onBlur={onBlur}
         className="rounded-md border border-transparent bg-transparent outline-none hover:border-border focus:border-accent focus:bg-card"
       >
@@ -24,12 +28,14 @@ export const TimeField = ({
       </select>
       <span>:</span>
       <select
-        value={m}
+        aria-label={minuteStep === 15 ? "Kwartier" : "Minuten"}
+        value={selectedMinute}
         onChange={e => onChange(`${h}:${e.target.value}`)}
         onBlur={onBlur}
         className="rounded-md border border-transparent bg-transparent outline-none hover:border-border focus:border-accent focus:bg-card"
       >
-        {MINUTES.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+        {!selectedMinute && <option value="" disabled>{m ?? "Kies"}</option>}
+        {minutes.map(mm => <option key={mm} value={mm}>{mm}</option>)}
       </select>
     </span>
   );
